@@ -6,6 +6,7 @@ Diese Konfiguration ist bewusst einfach gehalten:
 - Django REST Framework für die API-Endpunkte
 - CORS ist aktiviert, damit das React-Frontend das Backend aufrufen kann
 """
+from datetime import timedelta
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,6 +27,9 @@ INSTALLED_APPS = [
     'players',
     'formations',
     'lineups',
+    'auth_app',
+    'matchreport',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -77,10 +81,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
 ]
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
-    ]
+
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'auth_app.api.authentication.CookieJWTAuthentication',
+    )
 }
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=50),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
+
