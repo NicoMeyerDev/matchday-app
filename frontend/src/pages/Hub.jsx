@@ -130,6 +130,35 @@ const S = `
   }
   .cs-icon { font-size: 24px; }
   .cs-text { font-size: 12px; color: #52525b; font-style: italic; text-align: center; }
+
+  .kader-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+
+  .kader-tile {
+    background: #111116;
+    border-radius: 10px;
+    padding: 14px 8px;
+    text-align: center;
+    border: 1px solid #1a1a1a;
+  }
+
+  .kader-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .kader-lbl { font-size: 10px; color: #3f3f46; text-transform: uppercase; letter-spacing: 0.1em; }
+
+  .kader-tile.total .kader-num { color: #d4d4d8; }
+  .kader-tile.available .kader-num { color: #22c55e; }
+  .kader-tile.injured .kader-num { color: #f87171; }
+  .kader-tile.doubtful .kader-num { color: #fbbf24; }
+  .kader-tile.suspended .kader-num { color: #818cf8; }
 `;
 
 export default function Hub({ user, players, onNavigate }) {
@@ -197,11 +226,30 @@ export default function Hub({ user, players, onNavigate }) {
           <div className="bottom-row">
             <div className="info-card">
               <div className="section-label">Kaderstatus</div>
-              <div className="coming-soon">
-                <div className="cs-icon">🔒</div>
-                <div className="cs-text">Verfügbar wenn Spielerdaten erweitert werden</div>
+              <div className="kader-grid">
+                <div className="kader-tile total">
+                  <div className="kader-num">{players ? players.length : 0}</div>
+                  <div className="kader-lbl">Gesamt</div>
+                </div>
+                <div className="kader-tile available">
+                  <div className="kader-num">{players ? players.filter(p => !p.status || p.status === 'available').length : 0}</div>
+                  <div className="kader-lbl">Verfügbar</div>
+                </div>
+                <div className="kader-tile injured">
+                  <div className="kader-num">{players ? players.filter(p => p.status === 'injured').length : 0}</div>
+                  <div className="kader-lbl">Verletzt</div>
+                </div>
+                <div className="kader-tile doubtful">
+                  <div className="kader-num">{players ? players.filter(p => p.status === 'doubtful').length : 0}</div>
+                  <div className="kader-lbl">Fraglich</div>
+                </div>
+                <div className="kader-tile suspended">
+                  <div className="kader-num">{players ? players.filter(p => p.status === 'suspended').length : 0}</div>
+                  <div className="kader-lbl">Gesperrt</div>
+                </div>
               </div>
             </div>
+
             <div className="info-card">
               <div className="section-label">Letzte Berichte</div>
               <div className="coming-soon">
@@ -210,6 +258,7 @@ export default function Hub({ user, players, onNavigate }) {
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </>

@@ -15,6 +15,7 @@ import Hub from "./pages/Hub";
 import PostMatch from "./pages/PostMatch";
 import Layout from "./components/Layout";
 import PlayersPage from "./pages/Players";
+import Onboarding from "./pages/Onboarding";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -42,10 +43,15 @@ export default function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [isAddPlayerOpen, setIsAddPlayerOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState("feld");
+  const [club, setClub] = useState(null);
+  const [clubLoaded, setClubLoaded] = useState(false);
 
   useEffect(() => {
-    if (user) loadData();
-  }, [user]);
+    if (user) {
+      loadData();
+      loadClub();
+    }
+}, [user]);
 
   const selectedFormation = useMemo(
     () => formations.find((f) => f.id === selectedFormationId),
@@ -84,6 +90,10 @@ export default function App() {
 
   if (isLoading) return <main style={{ color: "#fff", padding: 40, background: "#07070a", minHeight: "100vh" }}>Lade Daten...</main>;
 
+  if (clubLoaded && !club) {
+  return <Onboarding user={user} onClubCreated={(c) => setClub(c)} />;
+}
+
   async function loadData() {
     try {
       setError("");
@@ -103,6 +113,17 @@ export default function App() {
       setIsLoading(false);
     }
   }
+
+  async function loadClub() {
+  const token = localStorage.getItem('access_token');
+  const res = await fetch('/api/clubs/', {
+    headers: { 'Authorization': `Bearer ${token}` },
+    credentials: 'include',
+  });
+  const data = await res.json();
+  setClub(data[0] || null);
+  setClubLoaded(true);
+}
 
   function applyLineup(lineup) {
     setSelectedLineupId(lineup.id);
