@@ -471,12 +471,12 @@ const STATUS_LABELS = {
 const FOOT_LABELS = { left: 'Links', right: 'Rechts', both: 'Beidfüßig' };
 
 const POSITION_DOTS = {
-  TW: { x: 50, y: 88 }, LV: { x: 18, y: 72 }, IVL: { x: 35, y: 72 },
-  IVR: { x: 65, y: 72 }, RV: { x: 82, y: 72 }, ZDM: { x: 50, y: 58 },
-  ZDML: { x: 35, y: 58 }, ZDMR: { x: 65, y: 58 }, LM: { x: 15, y: 45 },
-  ZM: { x: 50, y: 45 }, ZM1: { x: 35, y: 45 }, ZM2: { x: 65, y: 45 },
-  RM: { x: 85, y: 45 }, LF: { x: 20, y: 28 }, OM: { x: 50, y: 32 },
-  RF: { x: 80, y: 28 }, ST: { x: 50, y: 15 },
+  TW: { x: 50, y: 88 },
+  LV: { x: 18, y: 72 }, IVL: { x: 35, y: 72 }, IV: { x: 50, y: 75 }, IVM: { x: 50, y: 75 }, IVR: { x: 65, y: 72 }, RV: { x: 82, y: 72 },
+  ZDM: { x: 50, y: 62 }, ZDML: { x: 35, y: 62 }, ZDMR: { x: 65, y: 62 }, DM: { x: 50, y: 62 }, DML: { x: 35, y: 62 }, DMR: { x: 65, y: 62 },
+  LWB: { x: 10, y: 55 }, RWB: { x: 90, y: 55 },
+  LM: { x: 15, y: 45 }, ZM: { x: 50, y: 45 }, ZML: { x: 35, y: 45 }, ZMR: { x: 65, y: 45 }, ZM1: { x: 35, y: 45 }, ZM2: { x: 65, y: 45 }, RM: { x: 85, y: 45 }, OM: { x: 50, y: 35 }, ZAM: { x: 50, y: 35 },
+  LF: { x: 20, y: 25 }, RF: { x: 80, y: 25 }, ST: { x: 50, y: 15 }, STL: { x: 35, y: 18 }, STR: { x: 65, y: 18 },
 };
 
 const ATTRS = {
@@ -488,7 +488,7 @@ const ATTRS = {
 const POSITION_GROUPS = [
   { label: 'Tor', positions: ['TW'] },
   { label: 'Verteidigung', positions: ['LV', 'IVL', 'IV', 'IVR', 'RV', 'IVM'] },
-  { label: 'Mittelfeld', positions: ['ZDM', 'ZDML', 'ZDMR', 'LM', 'ZM', 'ZM1', 'ZM2', 'RM', 'OM', 'LWB', 'RWB'] },
+  { label: 'Mittelfeld', positions: ['ZDM', 'ZDML', 'ZDMR', 'DM', 'DML', 'DMR', 'LWB', 'RWB', 'LM', 'ZM', 'ZML', 'ZMR', 'ZM1', 'ZM2', 'RM', 'OM', 'ZAM'] },
   { label: 'Angriff', positions: ['LF', 'RF', 'ST', 'STL', 'STR'] },
 ];
 
@@ -496,7 +496,7 @@ function getGroup(position) {
   if (!position) return 'Sonstige';
   const pos = position.toUpperCase().trim();
   for (const group of POSITION_GROUPS) {
-    if (group.positions.some(p => pos.includes(p))) return group.label;
+    if (group.positions.some(p => pos === p || pos.includes(p))) return group.label;
   }
   return 'Sonstige';
 }

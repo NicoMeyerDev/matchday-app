@@ -14,7 +14,7 @@ class Player(models.Model):
     shirt_number = models.PositiveIntegerField(null=True, blank=True)
     preferred_positions = models.CharField(max_length=120, blank=True)
     foot = models.CharField(max_length=10, blank=True, choices=[('left', 'Links'), ('right', 'Rechts'), ('both', 'Beidfüßig')])
-    status = models.CharField(max_length=20, blank=True, default='available', choices=[('available', 'Verfügbar'), ('injured', 'Verletzt'), ('suspended', 'Gesperrt')])
+    status = models.CharField(max_length=20, blank=True, default='available', choices=[('available', 'Verfügbar'), ('injured', 'Verletzt'), ("doubtful", "Zweifelhaft"), ('suspended', 'Gesperrt')])
     notes = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
