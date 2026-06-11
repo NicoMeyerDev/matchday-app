@@ -3,6 +3,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import request, viewsets
+
+import clubs
+from clubs.models import Club
 from .models import Lineup, LineupSlot, LineupSubstitute
 from .serializers import LineupSerializer, LineupSlotSerializer, LineupSubstituteSerializer
 
@@ -56,24 +59,14 @@ class LineupViewSet(ModelViewSet):
         )
         return Response(LineupSubstituteSerializer(substitute).data)
     
-class LineupViewSet(viewsets.ModelViewSet):
-    """
-    Stellt die API-Endpunkte für Aufstellungen bereit.
+    def get_queryset(self):
+        user = self.request.user
+        clubs = Club.objects.filter(owner=user) | Club.objects.filter(members=user)
+        return Lineup.objects.filter(club__in=clubs).select_related('formation').prefetch_related(
+        'slots__position', 'slots__player', 'substitutes__player'
+        ).order_by('-updated_at')
 
-    Durch ModelViewSet entstehen automatisch:
-    - GET Liste
-    - GET Detail
-    - POST Erstellen
-    - PATCH/PUT Bearbeiten
-    - DELETE Löschen
-    """    
-    queryset = Lineup.objects.select_related("formation").prefetch_related(
-        "slots__position",
-        "slots__player",
-        "substitutes__player"
-    ).all().order_by("-updated_at")
-
-    serializer_class = LineupSerializer
-
-    
+    def perform_create(self, serializer):
+        club = Club.objects.filter(owner=self.request.user).first()
+        serializer.save(club=club)
 
