@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createLineup, deleteLineup, fetchFormations, fetchLineups, fetchPlayers, updateLineup } from "./api/client";
+import { createLineup, deleteLineup, fetchFormations, fetchLineups, fetchPlayers, updateLineup, fetchMatchReports } from "./api/client";
 import Header from "./components/Header";
 import FormationSelector from "./components/FormationSelector";
 import PlayerList from "./components/PlayerList";
@@ -16,6 +16,7 @@ import PostMatch from "./pages/PostMatch";
 import Layout from "./components/Layout";
 import PlayersPage from "./pages/Players";
 import Onboarding from "./pages/Onboarding";
+
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -45,6 +46,7 @@ export default function App() {
   const [mobileTab, setMobileTab] = useState("feld");
   const [club, setClub] = useState(null);
   const [clubLoaded, setClubLoaded] = useState(false);
+  const [matchReports, setMatchReports] = useState([]);
 
   useEffect(() => {
     if (user) {
@@ -104,6 +106,7 @@ export default function App() {
       setPlayers(playersData.filter((p) => p.is_active));
       setFormations(formationsData);
       setLineups(lineupsData);
+      setMatchReports(reportsData);
       const firstLineup = lineupsData[0];
       if (firstLineup) applyLineup(firstLineup);
       else if (formationsData[0]) setSelectedFormationId(formationsData[0].id);
@@ -223,7 +226,7 @@ export default function App() {
   const renderPage = () => {
     switch (currentPage) {
       case "hub":
-        return <Hub user={user} players={players} onNavigate={setCurrentPage} />;
+        return <Hub user={user} players={players} reports={matchReports} onNavigate={setCurrentPage} />;
       case "postmatch":
         return <PostMatch />;
       case "players":
