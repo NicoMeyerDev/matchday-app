@@ -1,15 +1,13 @@
 import { useState } from "react";
 
-/**
- * Steuerleiste für Formation, gespeicherte Aufstellungen und Speicheraktionen.
- * Der Bereich ist einklappbar, damit das Spielfeld im Alltag möglichst viel Platz bekommt.
- */
 export default function FormationSelector({
   formations,
   lineups,
   selectedFormationId,
   selectedLineupId,
   isSaving,
+  lineupTitle,
+  onLineupTitleChange,
   onSelectFormation,
   onSelectLineup,
   onCreateLineup,
@@ -26,12 +24,11 @@ export default function FormationSelector({
           <h2>Aufstellung</h2>
           {isOpen && <p>Formation wählen, gespeicherte Aufstellung laden und Änderungen sichern.</p>}
         </div>
-
         <button
           type="button"
           className="icon-collapse-button"
-          onClick={() => setIsOpen((currentState) => !currentState)}
-          aria-label={isOpen ? "Aufstellungsbereich einklappen" : "Aufstellungsbereich ausklappen"}
+          onClick={() => setIsOpen((s) => !s)}
+          aria-label={isOpen ? "Einklappen" : "Ausklappen"}
         >
           {isOpen ? "⌃" : "⌄"}
         </button>
@@ -40,10 +37,20 @@ export default function FormationSelector({
       {isOpen && (
         <div className="control-content">
           <label>
+            Name der Aufstellung
+            <input
+              type="text"
+              value={lineupTitle || ""}
+              onChange={(e) => onLineupTitleChange && onLineupTitleChange(e.target.value)}
+              placeholder="z.B. Heimspiel 4-2-3-1"
+            />
+          </label>
+
+          <label>
             Formation
-            <select value={selectedFormationId || ""} onChange={(event) => onSelectFormation(Number(event.target.value))}>
-              {formations.map((formation) => (
-                <option key={formation.id} value={formation.id}>{formation.name}</option>
+            <select value={selectedFormationId || ""} onChange={(e) => onSelectFormation(Number(e.target.value))}>
+              {formations.map((f) => (
+                <option key={f.id} value={f.id}>{f.name}</option>
               ))}
             </select>
           </label>
@@ -51,23 +58,20 @@ export default function FormationSelector({
           <label className="saved-lineup-field">
             Gespeicherte Aufstellung
             <div className="saved-lineup-row">
-              <select value={selectedLineupId || ""} onChange={(event) => onSelectLineup(Number(event.target.value))}>
+              <select value={selectedLineupId || ""} onChange={(e) => onSelectLineup(Number(e.target.value))}>
                 <option value="">Keine wählen</option>
-                {lineups.map((lineup) => (
-                  <option key={lineup.id} value={lineup.id}>{lineup.title} · {lineup.formation_detail?.name}</option>
+                {lineups.map((l) => (
+                  <option key={l.id} value={l.id}>{l.title} · {l.formation_detail?.name}</option>
                 ))}
               </select>
-
               <div className="settings-wrapper">
                 <button
                   type="button"
                   className="gear-button"
-                  onClick={() => setIsSettingsOpen((currentState) => !currentState)}
-                  aria-label="Aufstellungsoptionen öffnen"
+                  onClick={() => setIsSettingsOpen((s) => !s)}
                 >
                   ⚙
                 </button>
-
                 {isSettingsOpen && (
                   <div className="settings-menu">
                     <button type="button" onClick={onUpdateLineup} disabled={isSaving || !selectedLineupId}>

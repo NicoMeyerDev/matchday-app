@@ -476,3 +476,27 @@ h1 { margin: 0; font-size: 22px; font-weight: 700; }
   h1 { font-size: 18px; }
   .eyebrow { font-size: 11px; }
 }
+ 
+/* Spielfeld füllt die gesamte verfügbare Breite */
+.pitch-wrap {
+  width: 100%;
+}
+ 
+.pitch {
+  width: 100%;
+  height: 720px;
+}
+ 
+/* Workspace ohne Spielerliste (Matchday) */
+.workspace.no-drawer {
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+ 
+.workspace.no-drawer.right-open {
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+ 
+.workspace.no-drawer.right-closed {
+  grid-template-columns: minmax(0, 1fr) 72px;
+}
+ 
