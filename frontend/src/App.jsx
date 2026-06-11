@@ -14,6 +14,7 @@ import Register from "./pages/Register";
 import Hub from "./pages/Hub";
 import PostMatch from "./pages/PostMatch";
 import Layout from "./components/Layout";
+import PlayersPage from "./pages/Players";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -204,8 +205,10 @@ export default function App() {
         return <Hub user={user} players={players} onNavigate={setCurrentPage} />;
       case "postmatch":
         return <PostMatch />;
+      case "players":
+        return <PlayersPage />; 
       case "preparation":
-        return (
+        return (   
           <main className="app-shell">
             <Header selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
             {error && <div className="error-box">{error}</div>}

@@ -176,7 +176,9 @@ export default function Login({ onLoginSuccess, onGoToRegister }) {
         setError(data.detail || "Login fehlgeschlagen.");
         return;
       }
-
+      if (data.access) {
+      localStorage.setItem('access_token', data.access);
+}
       if (onLoginSuccess) onLoginSuccess(data.user);
     } catch {
       setError("Server nicht erreichbar.");

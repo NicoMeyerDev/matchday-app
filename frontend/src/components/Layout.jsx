@@ -153,10 +153,12 @@ const S = `
 export default function Layout({ user, onLogout, currentPage, onNavigate, children }) {
   const navItems = [
     { id: "hub", icon: "🏠", label: "Dashboard" },
+    { id: "players", icon: "👥", label: "Kader" },
     { id: "preparation", icon: "📋", label: "Vorbereitung" },
     { id: "matchday", icon: "🏟️", label: "Matchday" },
     { id: "postmatch", icon: "📊", label: "Post-Match" },
     { id: "analyse", icon: "📈", label: "Analyse", soon: true },
+    
   ];
 
   return (

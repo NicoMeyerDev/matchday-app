@@ -2,15 +2,17 @@
  * Zentrale API-Datei.
  * Hier wird die Verbindung zum Django-Backend gebündelt.
  */
-const API_BASE_URL = "http://127.0.0.1:8000/api";
+const API_BASE_URL = "/api";
  
 async function request(endpoint, options = {}) {
+  const token = localStorage.getItem('access_token');
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
-    credentials: "include", // JWT Cookie mitsenden
+    credentials: "include",
     ...options,
   });
  
