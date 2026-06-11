@@ -49,18 +49,31 @@ const S = `
 
   .players-content { padding: 24px 28px; }
 
-  /* PLAYER LIST */
+  /* POSITION GROUPS */
+  .position-group { margin-bottom: 32px; }
+
+  .position-group-title {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: #22c55e;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #141418;
+    font-weight: 500;
+  }
+
   .player-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 12px;
+    gap: 10px;
   }
 
   .player-card {
     background: #0a0a0f;
     border: 1px solid #141418;
     border-radius: 12px;
-    padding: 16px 20px;
+    padding: 14px 18px;
     display: flex;
     align-items: center;
     gap: 14px;
@@ -77,9 +90,9 @@ const S = `
 
   .player-card-num {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px;
+    font-size: 26px;
     color: #2a2a35;
-    width: 36px;
+    width: 32px;
     text-align: center;
     flex-shrink: 0;
   }
@@ -101,6 +114,8 @@ const S = `
   .mini-badge.suspended { background: #0f0f1f; color: #818cf8; }
 
   .player-card-pos { font-size: 11px; color: #3f3f46; }
+
+  .empty-group { font-size: 12px; color: #2a2a35; font-style: italic; padding: 8px 0; }
 
   /* PROFILE */
   .profile-root { padding: 24px 28px; }
@@ -205,7 +220,6 @@ const S = `
     font-weight: 500;
   }
 
-  /* MINI PITCH */
   .mini-pitch {
     position: relative;
     width: 100%; height: 180px;
@@ -252,17 +266,7 @@ const S = `
     transform: translate(-50%, -50%);
     box-shadow: 0 0 8px #22c55e88;
   }
-  .mp-dot-label {
-    position: absolute;
-    font-size: 9px;
-    color: #fff;
-    font-weight: 700;
-    transform: translate(-50%, 0);
-    white-space: nowrap;
-    margin-top: 8px;
-  }
 
-  /* INFO ROWS */
   .info-row {
     display: flex;
     justify-content: space-between;
@@ -274,7 +278,6 @@ const S = `
   .info-key { font-size: 11px; color: #3f3f46; text-transform: uppercase; letter-spacing: 0.1em; }
   .info-val { font-size: 13px; color: #d4d4d8; font-weight: 500; }
 
-  /* EDIT INPUTS */
   .edit-input {
     background: #111116;
     border: 1px solid #1e1e24;
@@ -320,7 +323,6 @@ const S = `
   }
   .edit-textarea:focus { border-color: #22c55e; }
 
-  /* ATTRIBUTES */
   .attr-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -372,6 +374,91 @@ const S = `
     color: #f87171;
     margin-bottom: 20px;
   }
+
+  /* ADD PLAYER MODAL */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+  }
+
+  .modal-card {
+    background: #0f0f14;
+    border: 1px solid #1e1e24;
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    color: #fff;
+    margin-bottom: 20px;
+    letter-spacing: 0.05em;
+  }
+
+  .modal-field { margin-bottom: 16px; }
+
+  .modal-label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: #3f3f46;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .modal-input {
+    width: 100%;
+    background: #111116;
+    border: 1px solid #1e1e24;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: #d4d4d8;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    box-sizing: border-box;
+  }
+  .modal-input:focus { border-color: #22c55e; }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    justify-content: flex-end;
+  }
+
+  .modal-btn-cancel {
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid #1e1e24;
+    border-radius: 8px;
+    color: #52525b;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .modal-btn-save {
+    padding: 10px 24px;
+    background: #22c55e;
+    color: #040f04;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+  .modal-btn-save:disabled { background: #0d2010; color: #1a3a1a; cursor: not-allowed; }
 `;
 
 const STATUS_LABELS = {
@@ -398,6 +485,22 @@ const ATTRS = {
   physical: ['Tempo', 'Ausdauer', 'Stärke', 'Agilität', 'Sprung', 'Balance'],
 };
 
+const POSITION_GROUPS = [
+  { label: 'Tor', positions: ['TW'] },
+  { label: 'Verteidigung', positions: ['LV', 'IVL', 'IV', 'IVR', 'RV', 'IVM'] },
+  { label: 'Mittelfeld', positions: ['ZDM', 'ZDML', 'ZDMR', 'LM', 'ZM', 'ZM1', 'ZM2', 'RM', 'OM', 'LWB', 'RWB'] },
+  { label: 'Angriff', positions: ['LF', 'RF', 'ST', 'STL', 'STR'] },
+];
+
+function getGroup(position) {
+  if (!position) return 'Sonstige';
+  const pos = position.toUpperCase().trim();
+  for (const group of POSITION_GROUPS) {
+    if (group.positions.some(p => pos.includes(p))) return group.label;
+  }
+  return 'Sonstige';
+}
+
 function MiniPitch({ positions }) {
   const pos = positions ? positions.split(',').map(p => p.trim()).filter(p => POSITION_DOTS[p]) : [];
   return (
@@ -408,9 +511,85 @@ function MiniPitch({ positions }) {
       {pos.map(p => (
         <div key={p}>
           <div className="mp-dot" style={{ left: `${POSITION_DOTS[p].x}%`, top: `${POSITION_DOTS[p].y}%` }} />
-          <div className="mp-dot-label" style={{ left: `${POSITION_DOTS[p].x}%`, top: `${POSITION_DOTS[p].y}%`, marginTop: '8px' }}>{p}</div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function AddPlayerModal({ onClose, onSaved }) {
+  const [form, setForm] = useState({ name: '', shirt_number: '', preferred_positions: '', foot: '', status: 'available' });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSave() {
+    if (!form.name.trim()) { setError('Name ist Pflichtfeld.'); return; }
+    setSaving(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('access_token');
+      const res = await fetch('/api/players/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        credentials: 'include',
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error('Fehler beim Speichern');
+      const player = await res.json();
+      onSaved(player);
+      onClose();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-card" onClick={e => e.stopPropagation()}>
+        <div className="modal-title">Neuer Spieler</div>
+
+        {error && <div className="error-box">{error}</div>}
+
+        <div className="modal-field">
+          <label className="modal-label">Name *</label>
+          <input className="modal-input" placeholder="z.B. Thomas Müller" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+        </div>
+        <div className="modal-field">
+          <label className="modal-label">Rückennummer</label>
+          <input className="modal-input" type="number" placeholder="z.B. 9" value={form.shirt_number} onChange={e => setForm({ ...form, shirt_number: e.target.value })} />
+        </div>
+        <div className="modal-field">
+          <label className="modal-label">Position</label>
+          <input className="modal-input" placeholder="z.B. ST, LM" value={form.preferred_positions} onChange={e => setForm({ ...form, preferred_positions: e.target.value })} />
+        </div>
+        <div className="modal-field">
+          <label className="modal-label">Fuß</label>
+          <select className="modal-input" value={form.foot} onChange={e => setForm({ ...form, foot: e.target.value })}>
+            <option value="">—</option>
+            <option value="left">Links</option>
+            <option value="right">Rechts</option>
+            <option value="both">Beidfüßig</option>
+          </select>
+        </div>
+        <div className="modal-field">
+          <label className="modal-label">Status</label>
+          <select className="modal-input" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
+            <option value="available">Verfügbar</option>
+            <option value="injured">Verletzt</option>
+            <option value="doubtful">Fraglich</option>
+            <option value="suspended">Gesperrt</option>
+          </select>
+        </div>
+
+        <div className="modal-actions">
+          <button className="modal-btn-cancel" onClick={onClose}>Abbrechen</button>
+          <button className="modal-btn-save" onClick={handleSave} disabled={saving}>
+            {saving ? 'Wird gespeichert...' : 'Spieler anlegen'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -446,7 +625,6 @@ function PlayerProfile({ player, onBack, onUpdate }) {
   return (
     <div className="profile-root">
       <button className="back-btn" onClick={onBack}>← Zurück zur Kaderliste</button>
-
       {error && <div className="error-box">{error}</div>}
 
       <div className="profile-header">
@@ -454,12 +632,7 @@ function PlayerProfile({ player, onBack, onUpdate }) {
           <div className="shirt-badge">#{form.shirt_number || '—'}</div>
           <div>
             {editMode ? (
-              <input
-                className="edit-input"
-                style={{ width: '260px', fontSize: '24px', marginBottom: '8px', textAlign: 'left' }}
-                value={form.name}
-                onChange={e => setForm({ ...form, name: e.target.value })}
-              />
+              <input className="edit-input" style={{ width: '260px', fontSize: '24px', marginBottom: '8px', textAlign: 'left' }} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
             ) : (
               <div className="profile-name">{form.name}</div>
             )}
@@ -479,10 +652,7 @@ function PlayerProfile({ player, onBack, onUpdate }) {
             </div>
           </div>
         </div>
-        <button
-          className={`edit-btn ${saving ? 'saving' : ''}`}
-          onClick={editMode ? handleSave : () => setEditMode(true)}
-        >
+        <button className={`edit-btn ${saving ? 'saving' : ''}`} onClick={editMode ? handleSave : () => setEditMode(true)}>
           {saving ? 'Wird gespeichert...' : editMode ? '✅ Speichern' : '✏️ Bearbeiten'}
         </button>
       </div>
@@ -493,41 +663,33 @@ function PlayerProfile({ player, onBack, onUpdate }) {
             <div className="card-label">Position auf dem Feld</div>
             <MiniPitch positions={form.preferred_positions} />
           </div>
-
           <div className="card">
             <div className="card-label">Spielerinfo</div>
             <div className="info-row">
               <span className="info-key">Rückennummer</span>
-              {editMode
-                ? <input className="edit-input" type="number" value={form.shirt_number} onChange={e => setForm({ ...form, shirt_number: e.target.value })} />
-                : <span className="info-val">#{form.shirt_number || '—'}</span>}
+              {editMode ? <input className="edit-input" type="number" value={form.shirt_number} onChange={e => setForm({ ...form, shirt_number: e.target.value })} /> : <span className="info-val">#{form.shirt_number || '—'}</span>}
             </div>
             <div className="info-row">
               <span className="info-key">Position</span>
-              {editMode
-                ? <input className="edit-input" placeholder="z.B. ST, LM" value={form.preferred_positions} onChange={e => setForm({ ...form, preferred_positions: e.target.value })} />
-                : <span className="info-val">{form.preferred_positions || '—'}</span>}
+              {editMode ? <input className="edit-input" placeholder="z.B. ST, LM" value={form.preferred_positions} onChange={e => setForm({ ...form, preferred_positions: e.target.value })} /> : <span className="info-val">{form.preferred_positions || '—'}</span>}
             </div>
             <div className="info-row">
               <span className="info-key">Fuß</span>
-              {editMode
-                ? <select className="edit-select" value={form.foot} onChange={e => setForm({ ...form, foot: e.target.value })}>
-                    <option value="">—</option>
-                    <option value="left">Links</option>
-                    <option value="right">Rechts</option>
-                    <option value="both">Beidfüßig</option>
-                  </select>
-                : <span className="info-val">{FOOT_LABELS[form.foot] || '—'}</span>}
+              {editMode ? (
+                <select className="edit-select" value={form.foot} onChange={e => setForm({ ...form, foot: e.target.value })}>
+                  <option value="">—</option>
+                  <option value="left">Links</option>
+                  <option value="right">Rechts</option>
+                  <option value="both">Beidfüßig</option>
+                </select>
+              ) : <span className="info-val">{FOOT_LABELS[form.foot] || '—'}</span>}
             </div>
           </div>
-
           <div className="card" style={{ flex: 1 }}>
             <div className="card-label">Trainernotizen</div>
-            {editMode
-              ? <textarea className="edit-textarea" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Notizen zum Spieler..." />
-              : form.notes
-                ? <p className="notes-text">{form.notes}</p>
-                : <p className="notes-empty">Noch keine Notizen.</p>}
+            {editMode ? (
+              <textarea className="edit-textarea" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Notizen zum Spieler..." />
+            ) : form.notes ? <p className="notes-text">{form.notes}</p> : <p className="notes-empty">Noch keine Notizen.</p>}
           </div>
         </div>
 
@@ -548,7 +710,6 @@ function PlayerProfile({ player, onBack, onUpdate }) {
               ))}
             </div>
           </div>
-
           <div className="card" style={{ opacity: 0.4 }}>
             <div className="card-label">Entwicklung über Zeit</div>
             <div className="dev-placeholder">Verfügbar nach erster Bewertung</div>
@@ -559,41 +720,47 @@ function PlayerProfile({ player, onBack, onUpdate }) {
   );
 }
 
-export default function Players({ onUpdatePlayer }) {
+export default function Players() {
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-  const token = localStorage.getItem('access_token');
-  fetch('/api/players/', { 
-    credentials: 'include',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  })
-  .then(r => r.json())
-  .then(data => { setPlayers(data); setLoading(false); })
-  .catch(e => { setError(e.message); setLoading(false); });
-}, []);
+    const token = localStorage.getItem('access_token');
+    fetch('/api/players/', {
+      credentials: 'include',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(data => { setPlayers(data); setLoading(false); })
+      .catch(e => { setError(e.message); setLoading(false); });
+  }, []);
 
   async function handleUpdate(id, data) {
-  const token = localStorage.getItem('access_token');
-  const res = await fetch(`/api/players/${id}/`, {
-    method: 'PATCH',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    credentials: 'include',
-    body: JSON.stringify(data),
+    const token = localStorage.getItem('access_token');
+    const res = await fetch(`/api/players/${id}/`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Fehler beim Speichern');
+    const updated = await res.json();
+    setPlayers(prev => prev.map(p => p.id === id ? updated : p));
+    setSelectedPlayer(updated);
+  }
+
+  // Spieler nach Positionsgruppen gruppieren
+  const grouped = {};
+  const groupOrder = ['Tor', 'Verteidigung', 'Mittelfeld', 'Angriff', 'Sonstige'];
+  groupOrder.forEach(g => { grouped[g] = []; });
+  players.forEach(p => {
+    const group = getGroup(p.preferred_positions);
+    if (!grouped[group]) grouped[group] = [];
+    grouped[group].push(p);
   });
-  if (!res.ok) throw new Error('Fehler beim Speichern');
-  const updated = await res.json();
-  setPlayers(prev => prev.map(p => p.id === id ? updated : p));
-  setSelectedPlayer(updated);
-}
 
   if (loading) return <div style={{ padding: 40, color: '#555' }}>Lade Kader...</div>;
 
@@ -601,11 +768,7 @@ export default function Players({ onUpdatePlayer }) {
     return (
       <>
         <style>{S}</style>
-        <PlayerProfile
-          player={selectedPlayer}
-          onBack={() => setSelectedPlayer(null)}
-          onUpdate={handleUpdate}
-        />
+        <PlayerProfile player={selectedPlayer} onBack={() => setSelectedPlayer(null)} onUpdate={handleUpdate} />
       </>
     );
   }
@@ -619,6 +782,7 @@ export default function Players({ onUpdatePlayer }) {
             <div className="page-label">Saison 2025/26</div>
             <div className="page-title">Kader</div>
           </div>
+          <button className="btn-primary" onClick={() => setShowAddModal(true)}>+ Spieler hinzufügen</button>
         </div>
 
         <div className="players-content">
@@ -626,33 +790,45 @@ export default function Players({ onUpdatePlayer }) {
 
           {players.length === 0 ? (
             <div style={{ color: '#2a2a35', fontStyle: 'italic', padding: '40px 0', textAlign: 'center' }}>
-              Noch keine Spieler im Kader. Füge Spieler in der Vorbereitung hinzu.
+              Noch keine Spieler im Kader. Füge deinen ersten Spieler hinzu!
             </div>
           ) : (
-            <div className="player-grid">
-              {players.map(p => {
-                const s = STATUS_LABELS[p.status] || STATUS_LABELS.available;
-                return (
-                  <div
-                    key={p.id}
-                    className={`player-card ${p.status || 'available'}`}
-                    onClick={() => setSelectedPlayer(p)}
-                  >
-                    <div className="player-card-num">{p.shirt_number || '—'}</div>
-                    <div className="player-card-info">
-                      <div className="player-card-name">{p.name}</div>
-                      <div className="player-card-meta">
-                        <span className={`mini-badge ${p.status || 'available'}`}>{s.label}</span>
-                        {p.preferred_positions && <span className="player-card-pos">{p.preferred_positions}</span>}
-                      </div>
-                    </div>
+            groupOrder.map(group => {
+              const groupPlayers = grouped[group];
+              if (groupPlayers.length === 0) return null;
+              return (
+                <div key={group} className="position-group">
+                  <div className="position-group-title">{group} ({groupPlayers.length})</div>
+                  <div className="player-grid">
+                    {groupPlayers.map(p => {
+                      const s = STATUS_LABELS[p.status] || STATUS_LABELS.available;
+                      return (
+                        <div key={p.id} className={`player-card ${p.status || 'available'}`} onClick={() => setSelectedPlayer(p)}>
+                          <div className="player-card-num">{p.shirt_number || '—'}</div>
+                          <div className="player-card-info">
+                            <div className="player-card-name">{p.name}</div>
+                            <div className="player-card-meta">
+                              <span className={`mini-badge ${p.status || 'available'}`}>{s.label}</span>
+                              {p.preferred_positions && <span className="player-card-pos">{p.preferred_positions}</span>}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })
           )}
         </div>
       </div>
+
+      {showAddModal && (
+        <AddPlayerModal
+          onClose={() => setShowAddModal(false)}
+          onSaved={(newPlayer) => setPlayers(prev => [...prev, newPlayer])}
+        />
+      )}
     </>
   );
 }
