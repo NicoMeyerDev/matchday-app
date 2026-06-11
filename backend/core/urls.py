@@ -12,4 +12,6 @@ urlpatterns = [
     path('api/players/', include('players.urls')),
     path('api/formations/', include('formations.urls')),
     path('api/lineups/', include('lineups.urls')),
+    path('api/matchreports/', include('matchreport.urls')),
+    path('api/clubs/', include('clubs.urls')),
 ]

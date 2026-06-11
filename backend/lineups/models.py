@@ -11,7 +11,7 @@ class Lineup(models.Model):
     Eine Aufstellung verbindet eine gewählte Formation mit zugewiesenen Spielern,
     Ersatzspielern und allgemeinen Trainer-Notizen.
     """
-
+    club = models.ForeignKey('clubs.Club', on_delete=models.CASCADE, related_name='lineups')
     title = models.CharField(max_length=120)
     opponent = models.CharField(max_length=120, blank=True)
     formation = models.ForeignKey(Formation, on_delete=models.PROTECT)

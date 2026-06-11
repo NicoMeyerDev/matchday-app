@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'players',
     'formations',
     'lineups',
+    'clubs',
     'auth_app',
     'matchreport',
     'rest_framework_simplejwt',
