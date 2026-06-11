@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import request, viewsets
+from rest_framework.permissions import IsAuthenticated
 
 import clubs
 from clubs.models import Club
@@ -22,6 +23,7 @@ class LineupViewSet(ModelViewSet):
         'slots__position', 'slots__player', 'substitutes__player'
     ).all().order_by('-updated_at')
     serializer_class = LineupSerializer
+    permission_classes = [IsAuthenticated]
 
     @action(detail=True, methods=['post'])
     def assign_player(self, request, pk=None):

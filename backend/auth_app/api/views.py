@@ -53,16 +53,16 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             key='access_token',
             value=access,
             httponly=True,
-            secure=True,
-            samesite='Lax'
+            secure=False,
+            samesite='None'
         )
 
         response.set_cookie(
             key='refresh_token',    
             value=refresh,
             httponly=True,
-            secure=True,
-            samesite='Lax'
+            secure=False,
+            samesite='None'
         )
 
         User = get_user_model()
@@ -70,7 +70,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
     
 
 
-        response.data = {"detail": "Login successfully!", "user": {"id": user.id, "username": user.username, "email": user.email   }}
+        response.data = {"detail": "Login successfully!", "user": {"id": user.id, "username": user.username, "email": user.email   }, "access": access }
         return response
     
     
@@ -99,8 +99,8 @@ class CookieRefreshView(TokenRefreshView):
             key='access_token',
             value=access_token,
             httponly=True,
-            secure=True,
-            samesite='Lax'
+            secure=False,
+            samesite='None'
         )
         return response
     

@@ -1,5 +1,6 @@
 """API-Views für die CRUD-Operationen der Spieler."""
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticated
 
 from clubs.models import Club
 from .models import Player
@@ -16,6 +17,7 @@ class PlayerViewSet(ModelViewSet):
 
     queryset = Player.objects.all().order_by('shirt_number', 'name')
     serializer_class = PlayerSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
