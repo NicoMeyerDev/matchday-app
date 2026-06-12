@@ -608,17 +608,20 @@ function PlayerProfile({ player, onBack, onUpdate }) {
   const [error, setError] = useState('');
 
   async function handleSave() {
-    setSaving(true);
-    setError('');
-    try {
-      await onUpdate(player.id, form);
-      setEditMode(false);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setSaving(false);
-    }
+  setSaving(true);
+  setError('');
+  try {
+    await onUpdate(player.id, {
+      ...form,
+      preferred_positions: form.preferred_positions.toUpperCase(),
+    });
+    setEditMode(false);
+  } catch (e) {
+    setError(e.message);
+  } finally {
+    setSaving(false);
   }
+}
 
   const statusInfo = STATUS_LABELS[form.status] || STATUS_LABELS.available;
 

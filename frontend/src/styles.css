@@ -438,7 +438,9 @@ textarea { width: 100%; min-height: 160px; resize: vertical; border: 1px solid #
 }
 
 .mobile-tabs {
-  display: none;
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
 }
 
 @media (max-width: 768px) {
@@ -450,20 +452,21 @@ textarea { width: 100%; min-height: 160px; resize: vertical; border: 1px solid #
   }
 
   .mobile-tab {
-    border: 1px solid #c9d7cc;
-    background: white;
-    border-radius: 12px;
-    padding: 10px;
-    font-weight: 700;
-    cursor: pointer;
-    font-size: 14px;
-  }
+  border: 1px solid #1e1e24;
+  background: #111116;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 14px;
+  color: #71717a;
+}
 
-  .mobile-tab.active {
-    background: #163d25;
-    color: white;
-    border-color: #163d25;
-  }
+.mobile-tab.active {
+  background: #0d1f0e;
+  border-color: #22c55e44;
+  color: #22c55e;
+}
 
   .mobile-hidden {
     display: none !important;

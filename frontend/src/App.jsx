@@ -16,13 +16,13 @@ import PostMatch from "./pages/PostMatch";
 import Layout from "./components/Layout";
 import PlayersPage from "./pages/Players";
 import Onboarding from "./pages/Onboarding";
-
+import MatchTimerBar from "./components/MatchTimerBar";
+import MatchdayFormationBar from "./components/MatchdayFormationBar";
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [authPage, setAuthPage] = useState("login");
   const [currentPage, setCurrentPage] = useState("hub");
-
   const [players, setPlayers] = useState([]);
   const [formations, setFormations] = useState([]);
   const [lineups, setLineups] = useState([]);
@@ -53,7 +53,7 @@ export default function App() {
       loadData();
       loadClub();
     }
-}, [user]);
+  }, [user]);
 
   const selectedFormation = useMemo(
     () => formations.find((f) => f.id === selectedFormationId),
@@ -77,7 +77,6 @@ export default function App() {
     return players.filter((p) => !matchingIds.has(p.id));
   }, [activePosition, matchingPlayersForActivePosition, players]);
 
-  // Auth guard
   if (!user) {
     if (authPage === "register") {
       return <Register onGoToLogin={() => setAuthPage("login")} />;
@@ -93,15 +92,15 @@ export default function App() {
   if (isLoading) return <main style={{ color: "#fff", padding: 40, background: "#07070a", minHeight: "100vh" }}>Lade Daten...</main>;
 
   if (clubLoaded && !club) {
-  return <Onboarding user={user} onClubCreated={(c) => setClub(c)} />;
-}
+    return <Onboarding user={user} onClubCreated={(c) => setClub(c)} />;
+  }
 
   async function loadData() {
     try {
       setError("");
       setIsLoading(true);
-      const [playersData, formationsData, lineupsData] = await Promise.all([
-        fetchPlayers(), fetchFormations(), fetchLineups(),
+      const [playersData, formationsData, lineupsData, reportsData] = await Promise.all([
+        fetchPlayers(), fetchFormations(), fetchLineups(), fetchMatchReports(),
       ]);
       setPlayers(playersData.filter((p) => p.is_active));
       setFormations(formationsData);
@@ -118,15 +117,15 @@ export default function App() {
   }
 
   async function loadClub() {
-  const token = localStorage.getItem('access_token');
-  const res = await fetch('/api/clubs/', {
-    headers: { 'Authorization': `Bearer ${token}` },
-    credentials: 'include',
-  });
-  const data = await res.json();
-  setClub(data[0] || null);
-  setClubLoaded(true);
-}
+    const token = localStorage.getItem('access_token');
+    const res = await fetch('/api/clubs/', {
+      headers: { 'Authorization': `Bearer ${token}` },
+      credentials: 'include',
+    });
+    const data = await res.json();
+    setClub(data[0] || null);
+    setClubLoaded(true);
+  }
 
   function applyLineup(lineup) {
     setSelectedLineupId(lineup.id);
@@ -222,7 +221,6 @@ export default function App() {
     setUser(null);
   }
 
-  // Page routing
   const renderPage = () => {
     switch (currentPage) {
       case "hub":
@@ -230,18 +228,13 @@ export default function App() {
       case "postmatch":
         return <PostMatch />;
       case "players":
-        return <PlayersPage />; 
+        return <PlayersPage />;
       case "preparation":
-        return (   
+        return (
           <main className="app-shell">
             <Header selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
             {error && <div className="error-box">{error}</div>}
             {info && <div className="info-box">{info}</div>}
-            <div className="mobile-tabs">
-              <button className={`mobile-tab ${mobileTab === "feld" ? "active" : ""}`} onClick={() => setMobileTab("feld")}>Feld</button>
-              <button className={`mobile-tab ${mobileTab === "spieler" ? "active" : ""}`} onClick={() => setMobileTab("spieler")}>Spieler</button>
-              <button className={`mobile-tab ${mobileTab === "bank" ? "active" : ""}`} onClick={() => setMobileTab("bank")}>Bank</button>
-            </div>
             <FormationSelector formations={formations} lineups={lineups} selectedFormationId={selectedFormationId} selectedLineupId={selectedLineupId} isSaving={isSaving} lineupTitle={lineupTitle} opponent={opponent} onLineupTitleChange={setLineupTitle} onOpponentChange={setOpponent} onSelectFormation={handleSelectFormation} onSelectLineup={handleSelectLineup} onCreateLineup={handleCreateLineup} onUpdateLineup={handleUpdateLineup} onDeleteLineup={handleDeleteLineup} />
             <div className={`workspace ${isPlayerDrawerOpen ? "drawer-open" : "drawer-closed"} ${isBenchOpen || isNotesOpen ? "right-open" : "right-closed"}`}>
               <div className={mobileTab !== "spieler" ? "mobile-hidden" : ""}>
@@ -265,11 +258,9 @@ export default function App() {
             <Header selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
             {error && <div className="error-box">{error}</div>}
             {info && <div className="info-box">{info}</div>}
-            <div className="mobile-tabs">
-              <button className={`mobile-tab ${mobileTab === "feld" ? "active" : ""}`} onClick={() => setMobileTab("feld")}>Feld</button>
-              <button className={`mobile-tab ${mobileTab === "bank" ? "active" : ""}`} onClick={() => setMobileTab("bank")}>Bank</button>
-            </div>
-            <FormationSelector formations={formations} lineups={lineups} selectedFormationId={selectedFormationId} selectedLineupId={selectedLineupId} isSaving={isSaving} lineupTitle={lineupTitle} opponent={opponent} onLineupTitleChange={setLineupTitle} onOpponentChange={setOpponent} onSelectFormation={handleSelectFormation} onSelectLineup={handleSelectLineup} onCreateLineup={handleCreateLineup} onUpdateLineup={handleUpdateLineup} onDeleteLineup={handleDeleteLineup} />
+            <MatchTimerBar onEventsUpdate={(e) => console.log(e)} />
+            <MatchdayFormationBar
+              lineups={lineups}selectedLineupId={selectedLineupId}onSelectLineup={handleSelectLineup}/>
             <div className={`workspace no-drawer ${isBenchOpen || isNotesOpen ? "right-open" : "right-closed"}`}>
               <div className={mobileTab !== "feld" ? "mobile-hidden" : ""}>
                 <Pitch formation={selectedFormation} assignedSlots={assignedSlots} onOpenPositionPicker={setActivePosition} onClearPosition={handleClearPosition} />
