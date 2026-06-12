@@ -47,6 +47,7 @@ export default function App() {
   const [club, setClub] = useState(null);
   const [clubLoaded, setClubLoaded] = useState(false);
   const [matchReports, setMatchReports] = useState([]);
+  const [matchEvents, setMatchEvents] = useState([]);
 
   useEffect(() => {
     if (user) {
@@ -226,7 +227,7 @@ export default function App() {
       case "hub":
         return <Hub user={user} players={players} reports={matchReports} onNavigate={setCurrentPage} />;
       case "postmatch":
-        return <PostMatch />;
+        return <PostMatch matchEvents={matchEvents} />;
       case "players":
         return <PlayersPage />;
       case "preparation":
@@ -258,7 +259,7 @@ export default function App() {
             <Header selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
             {error && <div className="error-box">{error}</div>}
             {info && <div className="info-box">{info}</div>}
-            <MatchTimerBar onEventsUpdate={(e) => console.log(e)} />
+            <MatchTimerBar onEventsUpdate={(e) => setMatchEvents(e)} />
             <MatchdayFormationBar
               lineups={lineups}selectedLineupId={selectedLineupId}onSelectLineup={handleSelectLineup}/>
             <div className={`workspace no-drawer ${isBenchOpen || isNotesOpen ? "right-open" : "right-closed"}`}>

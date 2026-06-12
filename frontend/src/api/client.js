@@ -59,3 +59,8 @@ export function updateMatchReport(id, payload) {
 export function deleteMatchReport(id) {
   return request(`/matchreports/${id}/`, { method: "DELETE" });
 }
+
+// ── MatchEvent ──
+export function createMatchEvent(payload) {
+  return request("/matchreports/events/", { method: "POST", body: JSON.stringify(payload) });
+}
