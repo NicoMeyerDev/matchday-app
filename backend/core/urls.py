@@ -1,10 +1,11 @@
-"""
-Zentrale URL-Konfiguration für die Backend-API.
-
-Alle MVP-Endpunkte liegen gesammelt unter /api/, damit das Frontend eine saubere Basis-URL verwenden kann.
-"""
+'''Alle MVP-Endpunkte liegen gesammelt unter /api/, damit das Frontend eine saubere Basis-URL verwenden kann.
+Zusätzlich liefert die Catch-all-Route am Ende das gebaute React-Frontend
+(frontend/dist/index.html) für alle Pfade aus, die nicht /api/ oder /admin/ sind.
+Das wird für das Deployment auf Render benötigt.
+'''
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
+from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 from matchreport.views import MatchEventViewSet
 
@@ -20,4 +21,8 @@ urlpatterns = [
     path('api/lineups/', include('lineups.urls')),
     path('api/matchreports/', include('matchreport.urls')),
     path('api/clubs/', include('clubs.urls')),
+
+    # Catch-all: liefert die React-App für alle übrigen Pfade aus
+    # (muss als letztes stehen, sonst würden API-Routen verschluckt)
+    re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
 ]
