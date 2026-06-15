@@ -38,7 +38,6 @@ export default function Pitch({ formation, assignedSlots, onOpenPositionPicker, 
           );
         })}
       </div>
-
     </section>
   );
 }
