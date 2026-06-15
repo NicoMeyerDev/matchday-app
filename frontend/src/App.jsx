@@ -260,7 +260,7 @@ export default function App() {
   }
 
   async function handleLogout() {
-    await fetch("http://localhost:8000/api/auth/logout/", { method: "POST", credentials: "include" });
+    await fetch("/api/auth/logout/", { method: "POST", credentials: "include" });
     setUser(null);
   }
 
