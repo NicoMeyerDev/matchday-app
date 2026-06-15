@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createLineup, deleteLineup, fetchFormations, fetchLineups, fetchPlayers, updateLineup, fetchMatchReports } from "./api/client";
 import Header from "./components/Header";
 import FormationSelector from "./components/FormationSelector";
@@ -18,6 +18,7 @@ import PlayersPage from "./pages/Players";
 import Onboarding from "./pages/Onboarding";
 import MatchTimerBar from "./components/MatchTimerBar";
 import MatchdayFormationBar from "./components/MatchdayFormationBar";
+import BriefingModal from "./components/BriefingModal";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -48,6 +49,11 @@ export default function App() {
   const [clubLoaded, setClubLoaded] = useState(false);
   const [matchReports, setMatchReports] = useState([]);
   const [matchEvents, setMatchEvents] = useState([]);
+
+  // Wechsel-Briefing (Matchday): aktuell angezeigtes Briefing oder null
+  const [briefing, setBriefing] = useState(null);
+  // Referenz auf die MatchTimerBar, um Wechsel automatisch zu loggen
+  const timerBarRef = useRef(null);
 
   useEffect(() => {
     if (user) {
@@ -163,6 +169,42 @@ export default function App() {
     setActivePosition(null);
   }
 
+    // Gibt alle anderen Positionen zurück (für die Spielfeld-Anzeige im Briefing)
+  function getNeighbors(position) {
+    if (!selectedFormation) return [];
+    return selectedFormation.positions
+      .filter((p) => p.id !== position.id)
+      .map((p) => {
+        const player = assignedSlots[p.id]?.player_detail;
+        return {
+          label: p.label,
+          x: p.x,
+          y: p.y,
+          number: player?.shirt_number,
+          name: player?.name,
+        };
+      });
+  }
+  
+
+  // Im Matchday: Spielerwechsel auslösen + automatisch Briefing öffnen + Wechsel auf Timeline loggen
+  function handleMatchdaySelectPlayer(player) {
+    const position = activePosition;
+    handleAssignPlayerToActivePosition(player);
+    if (!position || !player) return;
+
+    const neighbors = getNeighbors(position);
+    setBriefing({
+      position,
+      playerName: `#${player.shirt_number ?? "?"} ${player.name}`,
+      neighbors,
+    });
+
+    if (timerBarRef.current) {
+      timerBarRef.current.logWechsel(`${position.label}: ${player.name}`);
+    }
+  }
+
   function handleClearPosition(positionId) {
     setAssignedSlots((s) => { const n = { ...s }; delete n[positionId]; return n; });
   }
@@ -259,7 +301,7 @@ export default function App() {
             <Header selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
             {error && <div className="error-box">{error}</div>}
             {info && <div className="info-box">{info}</div>}
-            <MatchTimerBar onEventsUpdate={(e) => setMatchEvents(e)} />
+            <MatchTimerBar ref={timerBarRef} onEventsUpdate={(e) => setMatchEvents(e)} />
             <MatchdayFormationBar
               lineups={lineups}selectedLineupId={selectedLineupId}onSelectLineup={handleSelectLineup}/>
             <div className={`workspace no-drawer ${isBenchOpen || isNotesOpen ? "right-open" : "right-closed"}`}>
@@ -271,7 +313,16 @@ export default function App() {
                 <NotesPanel notes={notes} onChangeNotes={setNotes} isOpen={isNotesOpen} onToggle={() => setIsNotesOpen((s) => !s)} />
               </aside>
             </div>
-            <PositionPlayerPicker position={activePosition} currentPlayer={currentPlayerForActivePosition} matchingPlayers={matchingPlayersForActivePosition} otherPlayers={otherPlayersForActivePosition} onClose={() => setActivePosition(null)} onSelectPlayer={handleAssignPlayerToActivePosition} onClearPosition={(id) => { handleClearPosition(id); setActivePosition(null); }} />
+            <PositionPlayerPicker position={activePosition} currentPlayer={currentPlayerForActivePosition} matchingPlayers={matchingPlayersForActivePosition} otherPlayers={otherPlayersForActivePosition} onClose={() => setActivePosition(null)} onSelectPlayer={handleMatchdaySelectPlayer} onClearPosition={(id) => { handleClearPosition(id); setActivePosition(null); }} />
+            {briefing && (
+              <BriefingModal
+                position={briefing.position}
+                playerName={briefing.playerName}
+                neighbors={briefing.neighbors}
+                onConfirm={() => setBriefing(null)}
+                onCancel={() => setBriefing(null)}
+              />
+            )}
           </main>
         );
       default:

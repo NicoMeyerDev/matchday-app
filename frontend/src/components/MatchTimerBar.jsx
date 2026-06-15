@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 
 const S = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500&display=swap');
@@ -83,7 +83,6 @@ const S = `
   .tbar-btn.pause { background: #1f1a0a; border-color: #fbbf2444; color: #fbbf24; }
   .tbar-btn.tor { border-color: #22c55e33; color: #22c55e; }
   .tbar-btn.karte { border-color: #fbbf2433; color: #fbbf24; }
-  .tbar-btn.wechsel { border-color: #60a5fa33; color: #60a5fa; }
 
   .tbar-divider {
     width: 1px;
@@ -187,7 +186,7 @@ const S = `
 
 const TOTAL = 45 * 60;
 
-export default function MatchTimerBar({ onEventsUpdate }) {
+const MatchTimerBar = forwardRef(function MatchTimerBar({ onEventsUpdate }, ref) {
   const [remaining, setRemaining] = useState(TOTAL);
   const [running, setRunning] = useState(false);
   const [half, setHalf] = useState(1);
@@ -229,6 +228,14 @@ export default function MatchTimerBar({ onEventsUpdate }) {
     setCardType(null);
   }
 
+  // Von außen aufrufbar (z.B. aus App.jsx beim Spielerwechsel):
+  // loggt automatisch einen Wechsel-Eintrag auf der Timeline.
+  useImperativeHandle(ref, () => ({
+    logWechsel: (label) => {
+      addEvent('wechsel', { for_us: true, label });
+    },
+  }));
+
   function getChip(ev) {
     if (ev.type === 'tor') return ev.for_us
       ? { cls: 'chip-tor-us', label: '⚽ Tor' }
@@ -238,7 +245,7 @@ export default function MatchTimerBar({ onEventsUpdate }) {
       if (ev.card_type === 'yellow_red') return { cls: 'chip-yellow-red', label: '🟨🟥 G-R' };
       return { cls: 'chip-red', label: '🟥 Rot' };
     }
-    return { cls: 'chip-wechsel', label: '↔ Wechsel' };
+    return { cls: 'chip-wechsel', label: ev.label ? `↔ ${ev.label}` : '↔ Wechsel' };
   }
 
   return (
@@ -263,7 +270,6 @@ export default function MatchTimerBar({ onEventsUpdate }) {
             <div className="tbar-divider" />
             <button className="tbar-btn tor" onClick={() => setActiveModal(activeModal === 'tor' ? null : 'tor')}>⚽ Tor</button>
             <button className="tbar-btn karte" onClick={() => setActiveModal(activeModal === 'karte' ? null : 'karte')}>🟨 Karte</button>
-            <button className="tbar-btn wechsel" onClick={() => setActiveModal(activeModal === 'wechsel' ? null : 'wechsel')}>↔ Wechsel</button>
           </div>
         </div>
 
@@ -288,14 +294,6 @@ export default function MatchTimerBar({ onEventsUpdate }) {
           </div>
         )}
 
-        {activeModal === 'wechsel' && (
-          <div className="tbar-popup">
-            <span className="tbar-popup-title">Wechsel — {currentMinute}'</span>
-            <button className="tbar-cancel" onClick={() => setActiveModal(null)}>✕</button>
-            <button className="tbar-confirm" onClick={() => addEvent('wechsel', { for_us: true })}>Eintragen</button>
-          </div>
-        )}
-
         {events.length > 0 && (
           <div className="tbar-events">
             {events.map(ev => {
@@ -312,4 +310,6 @@ export default function MatchTimerBar({ onEventsUpdate }) {
       </div>
     </>
   );
-}
+});
+
+export default MatchTimerBar;
