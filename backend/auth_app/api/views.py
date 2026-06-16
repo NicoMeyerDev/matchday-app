@@ -53,7 +53,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             key='access_token',
             value=access,
             httponly=True,
-            secure=False,
+            secure=True,
             samesite='None'
         )
 
@@ -61,7 +61,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             key='refresh_token',    
             value=refresh,
             httponly=True,
-            secure=False,
+            secure=True,
             samesite='None'
         )
 
@@ -82,7 +82,7 @@ class CookieRefreshView(TokenRefreshView):
 
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get('refresh_token')
-        #refresh token nicht im Cookie gefunden
+
         if refresh_token is None:
             return Response({"detail": "Refresh token not provided"}, status=status.HTTP_401_UNAUTHORIZED)   
         
@@ -94,12 +94,12 @@ class CookieRefreshView(TokenRefreshView):
             return Response({"detail": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
         
         access_token = serializer.validated_data.get('access')
-        response = Response({"detail": "Token refreshed"})
+        response = Response({"detail": "Token refreshed", "access": access_token})
         response.set_cookie(
             key='access_token',
             value=access_token,
             httponly=True,
-            secure=False,
+            secure=True,
             samesite='None'
         )
         return response

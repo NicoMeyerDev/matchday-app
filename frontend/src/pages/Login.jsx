@@ -177,8 +177,12 @@ export default function Login({ onLoginSuccess, onGoToRegister }) {
         return;
       }
       if (data.access) {
-      localStorage.setItem('access_token', data.access);
-}
+        localStorage.setItem('access_token', data.access);
+      }
+      if (data.refresh) {
+        localStorage.setItem('refresh_token', data.refresh);
+      }
+      
       if (onLoginSuccess) onLoginSuccess(data.user);
     } catch {
       setError("Server nicht erreichbar.");

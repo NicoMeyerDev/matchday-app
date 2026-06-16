@@ -77,12 +77,25 @@ export default function App() {
   // Referenz auf die MatchTimerBar, um Wechsel automatisch zu loggen
   const timerBarRef = useRef(null);
 
+
+  // TODO: loadClub() macht einen direkten fetch() statt über api/client.js zu laufen.
+  // Dadurch profitiert dieser Call NICHT vom automatischen Token-Refresh.
+  // Aktuell unkritisch (wird nur einmal beim Login aufgerufen), aber falls hier später
+  // mehr direkte fetch()-Aufrufe entstehen, müssen die durch request() aus client.js ersetzt werden.
   useEffect(() => {
     if (user) {
       loadData();
       loadClub();
     }
   }, [user]);
+
+  useEffect(() => {
+  function handleAuthExpired() {
+    setUser(null);
+  }
+  window.addEventListener('auth:expired', handleAuthExpired);
+  return () => window.removeEventListener('auth:expired', handleAuthExpired);
+}, []);
 
   async function refreshMatchReports() {
   const fresh = await fetchMatchReports();
