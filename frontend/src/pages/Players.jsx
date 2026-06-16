@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from 'react';
+import { recordPlayerView } from '../utils/recentlyViewed';
 
 const S = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500&display=swap');
@@ -562,7 +563,7 @@ function AddPlayerModal({ onClose, onSaved }) {
         </div>
         <div className="modal-field">
           <label className="modal-label">Position</label>
-          <input className="modal-input" placeholder="z.B. ST, LM" value={form.preferred_positions} onChange={e => setForm({ ...form, preferred_positions: e.target.value })} />
+          <input className="modal-input" placeholder="z.B. ST, LM" value={form.preferred_positions.toUpperCase()} onChange={e => setForm({ ...form, preferred_positions: e.target.value })} />
         </div>
         <div className="modal-field">
           <label className="modal-label">Fuß</label>
@@ -723,9 +724,10 @@ function PlayerProfile({ player, onBack, onUpdate }) {
   );
 }
 
-export default function Players() {
+export default function Players({ initialPlayerId } = {}) {
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const consumedInitialPlayerRef = useRef(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -740,6 +742,17 @@ export default function Players() {
       .then(data => { setPlayers(data); setLoading(false); })
       .catch(e => { setError(e.message); setLoading(false); });
   }, []);
+
+  useEffect(() => {
+    if (initialPlayerId && !consumedInitialPlayerRef.current && players.length > 0) {
+      const target = players.find(p => p.id === initialPlayerId);
+      if (target) {
+        setSelectedPlayer(target);
+        recordPlayerView(target.id);
+        consumedInitialPlayerRef.current = true;
+      }
+    }
+  }, [initialPlayerId, players]);
 
   async function handleUpdate(id, data) {
     const token = localStorage.getItem('access_token');
@@ -806,7 +819,7 @@ export default function Players() {
                     {groupPlayers.map(p => {
                       const s = STATUS_LABELS[p.status] || STATUS_LABELS.available;
                       return (
-                        <div key={p.id} className={`player-card ${p.status || 'available'}`} onClick={() => setSelectedPlayer(p)}>
+                        <div key={p.id} className={`player-card ${p.status || 'available'}`} onClick={() => { recordPlayerView(p.id); setSelectedPlayer(p); }}>
                           <div className="player-card-num">{p.shirt_number || '—'}</div>
                           <div className="player-card-info">
                             <div className="player-card-name">{p.name}</div>

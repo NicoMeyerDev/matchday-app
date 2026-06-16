@@ -279,7 +279,7 @@ export default function MatchTimer({ onEventsUpdate }) {
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
   const elapsed = TOTAL - remaining;
-  const currentMinute = Math.floor(elapsed / 60);
+  const currentMinute = (half === 2 ? 45 : 0) + Math.floor(elapsed / 60) + 1;
   const progress = (remaining / TOTAL) * 100;
 
   function handleHalfTime() {

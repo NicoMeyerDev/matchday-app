@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createLineup, deleteLineup, fetchFormations, fetchLineups, fetchPlayers, updateLineup, fetchMatchReports } from "./api/client";
+import { createLineup, deleteLineup, fetchFormations, fetchLineups, fetchPlayers, updateLineup, fetchMatchReports, createMatchReport, createMatchEvent  } from "./api/client";
 import Header from "./components/Header";
 import FormationSelector from "./components/FormationSelector";
 import PlayerList from "./components/PlayerList";
@@ -19,6 +19,26 @@ import Onboarding from "./pages/Onboarding";
 import MatchTimerBar from "./components/MatchTimerBar";
 import MatchdayFormationBar from "./components/MatchdayFormationBar";
 import BriefingModal from "./components/BriefingModal";
+
+function BackButton({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: "transparent",
+        border: "1px solid #27272a",
+        color: "#a1a1aa",
+        borderRadius: "8px",
+        padding: "8px 14px",
+        fontSize: "13px",
+        cursor: "pointer",
+        marginBottom: "16px",
+      }}
+    >
+      ← Zurück zum Hub
+    </button>
+  );
+}
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -49,6 +69,8 @@ export default function App() {
   const [clubLoaded, setClubLoaded] = useState(false);
   const [matchReports, setMatchReports] = useState([]);
   const [matchEvents, setMatchEvents] = useState([]);
+  const [hubPlayerTarget, setHubPlayerTarget] = useState(null);
+  const [hubReportTarget, setHubReportTarget] = useState(null);
 
   // Wechsel-Briefing (Matchday): aktuell angezeigtes Briefing oder null
   const [briefing, setBriefing] = useState(null);
@@ -61,6 +83,11 @@ export default function App() {
       loadClub();
     }
   }, [user]);
+
+  async function refreshMatchReports() {
+  const fresh = await fetchMatchReports();
+  setMatchReports(fresh);
+  }
 
   const selectedFormation = useMemo(
     () => formations.find((f) => f.id === selectedFormationId),
@@ -264,17 +291,70 @@ export default function App() {
     setUser(null);
   }
 
+  async function handleMatchEnd(events) {
+  if (!events || events.length === 0) return;
+  if (!selectedLineupId) {
+    setError("Keine Aufstellung ausgewählt – Bericht konnte nicht automatisch erstellt werden.");
+    return;
+  }
+  try {
+    const report = await createMatchReport({
+      lineup: selectedLineupId,
+      opponent: opponent || "",
+      result: "",
+      notes: "",
+    });
+    await Promise.all(events.map(ev => createMatchEvent({
+      match_report: report.id,
+      minute: ev.minute,
+      event_type: ev.type,
+      for_us: ev.for_us ?? true,
+      card_type: ev.card_type || "",
+      description: "",
+    })));
+    setMatchEvents([]);
+    setInfo("Spielbericht wurde automatisch erstellt.");
+    setCurrentPage("postmatch");
+  } catch (e) {
+    setError(e.message);
+  }
+}
+
   const renderPage = () => {
     switch (currentPage) {
       case "hub":
-        return <Hub user={user} players={players} reports={matchReports} onNavigate={setCurrentPage} />;
+        return (
+          <Layout user={user} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
+            <Hub
+              user={user}
+              players={players}
+              reports={matchReports}
+              onNavigate={setCurrentPage}
+              onSelectPlayer={(id) => { setHubPlayerTarget(id); setCurrentPage("players"); }}
+              onSelectReport={(id) => { setHubReportTarget(id); setCurrentPage("postmatch"); }}
+           />
+        </Layout>
+        );
       case "postmatch":
-        return <PostMatch matchEvents={matchEvents} />;
+        return (
+          <main className="app-shell">
+          <BackButton onClick={() => setCurrentPage("hub")} />
+          <PostMatch matchEvents={matchEvents} initialReportId={hubReportTarget} onReportsChanged={refreshMatchReports} />
+          </main>
+      );
       case "players":
-        return <PlayersPage />;
+        return (
+          <Layout user={user} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
+            <main className="app-shell">
+              <BackButton onClick={() => setCurrentPage("hub")} />
+              <PlayersPage initialPlayerId={hubPlayerTarget} />
+            </main>
+          </Layout>
+        );
       case "preparation":
         return (
           <main className="app-shell">
+            <BackButton onClick={() => setCurrentPage("hub")} />
             <Header selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
             {error && <div className="error-box">{error}</div>}
             {info && <div className="info-box">{info}</div>}
@@ -298,12 +378,13 @@ export default function App() {
       case "matchday":
         return (
           <main className="app-shell">
+            <BackButton onClick={() => setCurrentPage("hub")} />
             <Header selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
             {error && <div className="error-box">{error}</div>}
             {info && <div className="info-box">{info}</div>}
-            <MatchTimerBar ref={timerBarRef} onEventsUpdate={(e) => setMatchEvents(e)} />
+            <MatchTimerBar ref={timerBarRef} onEventsUpdate={(e) => setMatchEvents(e)} onMatchEnd={handleMatchEnd} />
             <MatchdayFormationBar
-              lineups={lineups}selectedLineupId={selectedLineupId}onSelectLineup={handleSelectLineup}/>
+              lineups={lineups} selectedLineupId={selectedLineupId} onSelectLineup={handleSelectLineup} />
             <div className={`workspace no-drawer ${isBenchOpen || isNotesOpen ? "right-open" : "right-closed"}`}>
               <div className={mobileTab !== "feld" ? "mobile-hidden" : ""}>
                 <Pitch formation={selectedFormation} assignedSlots={assignedSlots} onOpenPositionPicker={setActivePosition} onClearPosition={handleClearPosition} />
@@ -326,13 +407,13 @@ export default function App() {
           </main>
         );
       default:
-        return <Hub user={user} players={players} onNavigate={setCurrentPage} />;
+        return (
+          <Layout user={user} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
+            <Hub user={user} players={players} onNavigate={setCurrentPage} />
+          </Layout>
+        );
     }
   };
 
-  return (
-    <Layout user={user} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
-      {renderPage()}
-    </Layout>
-  );
+  return renderPage();
 }

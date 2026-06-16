@@ -30,7 +30,7 @@ export default function Pitch({ formation, assignedSlots, onOpenPositionPicker, 
             >
               <span className="position-label">{position.label}</span>
               {player ? (
-                <span className="player-on-pitch">#{player.shirt_number} {player.name}</span>
+                <span className="player-on-pitch">{player.shirt_number} {player.name}</span>
               ) : (
                 <span className="empty-slot">frei</span>
               )}

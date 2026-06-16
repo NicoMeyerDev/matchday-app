@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 const S = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500&display=swap');
 
@@ -21,7 +23,24 @@ const S = `
     position: fixed;
     top: 0; left: 0; bottom: 0;
     z-index: 100;
+    transition: width 0.2s ease;
+    overflow: hidden;
   }
+
+  .sidebar.collapsed { width: 64px; }
+
+  .sidebar-toggle {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #141418;
+    color: #71717a;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 16px 20px;
+    text-align: left;
+    width: 100%;
+  }
+  .sidebar-toggle:hover { color: #fff; }
 
   .sidebar-logo {
     padding: 24px 20px 20px;
@@ -142,15 +161,25 @@ const S = `
   }
   .btn-logout:hover { color: #f87171; }
 
+  /* COLLAPSED STATE */
+  .sidebar.collapsed .hide-on-collapse { display: none; }
+  .sidebar.collapsed .nav-item { justify-content: center; padding: 10px 0; }
+  .sidebar.collapsed .sidebar-club { justify-content: center; padding: 16px 0; }
+  .sidebar.collapsed .sidebar-bottom { justify-content: center; padding: 16px 0; }
+
   /* MAIN CONTENT */
   .layout-main {
     margin-left: 220px;
     flex: 1;
     min-height: 100vh;
+    transition: margin-left 0.2s ease;
   }
+  .layout-main.collapsed { margin-left: 64px; }
 `;
 
 export default function Layout({ user, onLogout, currentPage, onNavigate, children }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   const navItems = [
     { id: "hub", icon: "🏠", label: "Dashboard" },
     { id: "players", icon: "👥", label: "Kader" },
@@ -158,22 +187,25 @@ export default function Layout({ user, onLogout, currentPage, onNavigate, childr
     { id: "matchday", icon: "🏟️", label: "Matchday" },
     { id: "postmatch", icon: "📊", label: "Post-Match" },
     { id: "analyse", icon: "📈", label: "Analyse", soon: true },
-    
   ];
 
   return (
     <>
       <style>{S}</style>
       <div className="layout-root">
-        <aside className="sidebar">
-          <div className="sidebar-logo">
+        <aside className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
+          <button className="sidebar-toggle" onClick={() => setIsCollapsed((c) => !c)} title="Menü ein-/ausblenden">
+            ☰
+          </button>
+
+          <div className="sidebar-logo hide-on-collapse">
             <div className="app-name">Matchday</div>
             <div className="app-sub">Coaching App</div>
           </div>
 
           <div className="sidebar-club">
             <div className="club-badge">⚽</div>
-            <div>
+            <div className="hide-on-collapse">
               <div className="club-name">Mein Verein</div>
               <div className="club-team">1. Herren</div>
             </div>
@@ -185,25 +217,26 @@ export default function Layout({ user, onLogout, currentPage, onNavigate, childr
                 key={item.id}
                 className={`nav-item ${currentPage === item.id ? "active" : ""}`}
                 onClick={() => !item.soon && onNavigate(item.id)}
+                title={item.label}
               >
                 <span className="nav-icon">{item.icon}</span>
-                {item.label}
-                {item.soon && <span className="nav-soon">Bald</span>}
+                <span className="hide-on-collapse">{item.label}</span>
+                {item.soon && <span className="nav-soon hide-on-collapse">Bald</span>}
               </button>
             ))}
           </nav>
 
           <div className="sidebar-bottom">
             <div className="avatar">{user?.username?.[0]?.toUpperCase() || "T"}</div>
-            <div>
+            <div className="hide-on-collapse">
               <div className="user-name">{user?.username || "Trainer"}</div>
               <div className="user-role">Trainer</div>
             </div>
-            <button className="btn-logout" onClick={onLogout} title="Abmelden">⏻</button>
+            <button className="btn-logout hide-on-collapse" onClick={onLogout} title="Abmelden">⏻</button>
           </div>
         </aside>
 
-        <main className="layout-main">
+        <main className={`layout-main ${isCollapsed ? "collapsed" : ""}`}>
           {children}
         </main>
       </div>

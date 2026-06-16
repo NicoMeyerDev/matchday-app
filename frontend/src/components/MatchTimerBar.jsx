@@ -186,8 +186,8 @@ const S = `
 
 const TOTAL = 45 * 60;
 
-const MatchTimerBar = forwardRef(function MatchTimerBar({ onEventsUpdate }, ref) {
-  const [remaining, setRemaining] = useState(TOTAL);
+const MatchTimerBar = forwardRef(function MatchTimerBar({ onEventsUpdate, onMatchEnd }, ref) {
+  const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(false);
   const [half, setHalf] = useState(1);
   const [events, setEvents] = useState([]);
@@ -195,13 +195,14 @@ const MatchTimerBar = forwardRef(function MatchTimerBar({ onEventsUpdate }, ref)
   const [torSide, setTorSide] = useState(null);
   const [cardType, setCardType] = useState(null);
   const intervalRef = useRef(null);
+  const prevElapsedRef = useRef(0);
 
   useEffect(() => {
     if (running) {
       intervalRef.current = setInterval(() => {
-        setRemaining(r => {
-          if (r <= 0) { clearInterval(intervalRef.current); setRunning(false); return 0; }
-          return r - 1;
+        setElapsed(e => {
+          if (e >= TOTAL) { clearInterval(intervalRef.current); setRunning(false); return TOTAL; }
+          return e + 1;
         });
       }, 1000);
     } else {
@@ -214,12 +215,19 @@ const MatchTimerBar = forwardRef(function MatchTimerBar({ onEventsUpdate }, ref)
     if (onEventsUpdate) onEventsUpdate(events);
   }, [events]);
 
+  useEffect(() => {
+  if (prevElapsedRef.current < TOTAL && elapsed >= TOTAL) {
+    if (onMatchEnd) onMatchEnd(events);
+  }
+  prevElapsedRef.current = elapsed;
+}, [elapsed, events, onMatchEnd]);
+
   const pad = n => String(n).padStart(2, '0');
-  const minutes = Math.floor(remaining / 60);
-  const seconds = remaining % 60;
-  const elapsed = TOTAL - remaining;
-  const currentMinute = Math.floor(elapsed / 60);
-  const progress = (remaining / TOTAL) * 100;
+  const displayMinutes = (half === 2 ? 45 : 0) + Math.floor(elapsed / 60);
+  const currentMinute = displayMinutes + 1;
+  const minutes = displayMinutes;
+  const seconds = elapsed % 60;
+  const progress = (elapsed / TOTAL) * 100;
 
   function addEvent(type, details) {
     setEvents(prev => [...prev, { type, minute: currentMinute, ...details, id: Date.now() }]);
@@ -235,6 +243,17 @@ const MatchTimerBar = forwardRef(function MatchTimerBar({ onEventsUpdate }, ref)
       addEvent('wechsel', { for_us: true, label });
     },
   }));
+
+  
+  function handleStop() {
+  clearInterval(intervalRef.current);
+  setRunning(false);
+  if (onMatchEnd) onMatchEnd(events);
+  setHalf(1);
+  setElapsed(0);
+  setEvents([]);
+  setActiveModal(null);
+}
 
   function getChip(ev) {
     if (ev.type === 'tor') return ev.for_us
@@ -265,8 +284,8 @@ const MatchTimerBar = forwardRef(function MatchTimerBar({ onEventsUpdate }, ref)
             >
               {running ? '⏸ Pause' : '▶ Start'}
             </button>
-            <button className="tbar-btn" onClick={() => { clearInterval(intervalRef.current); setRunning(false); setHalf(2); setRemaining(TOTAL); }}>↺ HZ</button>
-            <button className="tbar-btn" onClick={() => { clearInterval(intervalRef.current); setRunning(false); setHalf(1); setRemaining(TOTAL); setEvents([]); setActiveModal(null); }}>■</button>
+            <button className="tbar-btn" onClick={() => { clearInterval(intervalRef.current); setRunning(false); setHalf(2); setElapsed(0); }}>↺ HZ</button>
+            <button className="tbar-btn" onClick={handleStop}>■</button>
             <div className="tbar-divider" />
             <button className="tbar-btn tor" onClick={() => setActiveModal(activeModal === 'tor' ? null : 'tor')}>⚽ Tor</button>
             <button className="tbar-btn karte" onClick={() => setActiveModal(activeModal === 'karte' ? null : 'karte')}>🟨 Karte</button>

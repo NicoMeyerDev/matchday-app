@@ -1,3 +1,5 @@
+import { getRecentlyViewedIds } from "../utils/recentlyViewed";
+
 const S = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500&display=swap');
 
@@ -76,10 +78,13 @@ const S = `
   .recent-empty { font-size: 12px; color: #2a2a35; font-style: italic; padding: 8px 0; }
 `;
 
-export default function Hub({ user, players, reports, onNavigate }) {
+export default function Hub({ user, players, reports, onNavigate, onSelectPlayer, onSelectReport }) {
   const today = new Date().toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" });
 
-  const recentPlayers = players ? players.slice(0, 4) : [];
+  const recentIds = getRecentlyViewedIds();
+  const recentPlayers = players
+    ? recentIds.map(id => players.find(p => p.id === id)).filter(Boolean).slice(0, 4)
+    : [];
   const recentReports = reports ? reports.slice(0, 3) : [];
 
   const count = (status) => players ? players.filter(p => p.status === status).length : 0;
@@ -165,7 +170,7 @@ export default function Hub({ user, players, reports, onNavigate }) {
                   <div className="report-empty">Noch keine Berichte vorhanden.</div>
                 ) : (
                   recentReports.map(r => (
-                    <div key={r.id} className="report-item" onClick={() => onNavigate("postmatch")} style={{cursor:'pointer'}}>
+                    <div key={r.id} className="report-item" onClick={() => onSelectReport(r.id)} style={{cursor:'pointer'}}>
                       {r.result && <div className="report-result">{r.result}</div>}
                       <div>
                         <div className="report-opponent">{r.opponent || 'Unbekannter Gegner'}</div>
@@ -182,7 +187,7 @@ export default function Hub({ user, players, reports, onNavigate }) {
                   <div className="recent-empty">Noch keine Spieler angeschaut.</div>
                 ) : (
                   recentPlayers.map(p => (
-                    <div key={p.id} className="player-row">
+                    <div key={p.id} className="player-row" onClick={() => onSelectPlayer(p.id)}>
                       <div className="player-num">{p.shirt_number || '—'}</div>
                       <div className="player-avatar">👤</div>
                       <div>

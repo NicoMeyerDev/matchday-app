@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   fetchMatchReports,
   createMatchReport,
@@ -124,7 +124,7 @@ function getEventBadge(ev) {
   return { cls: 'badge-wechsel', label: '↔ Wechsel' };
 }
 
-export default function PostMatch({ matchEvents = [] }) {
+export default function PostMatch({ matchEvents = [], initialReportId = null, onReportsChanged }) {
   const [reports, setReports] = useState([]);
   const [lineups, setLineups] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -133,8 +133,22 @@ export default function PostMatch({ matchEvents = [] }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [expandedId, setExpandedId] = useState(null);
+  const consumedInitialReportRef = useRef(false);
 
   useEffect(() => { loadAll(); }, []);
+
+  useEffect(() => {
+  if (initialReportId && !consumedInitialReportRef.current && reports.length > 0) {
+    const target = reports.find(r => r.id === initialReportId);
+    if (target) {
+      setExpandedId(target.id);
+      consumedInitialReportRef.current = true;
+      setTimeout(() => {
+        document.getElementById(`report-${target.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+    }
+  }
+}, [initialReportId, reports]);
 
   async function loadAll() {
     try {
@@ -179,6 +193,7 @@ export default function PostMatch({ matchEvents = [] }) {
       }
       await loadAll();
       handleCancel();
+      onReportsChanged?.();
     } catch (e) { setError(e.message); } finally { setSaving(false); }
   }
 
@@ -188,6 +203,7 @@ export default function PostMatch({ matchEvents = [] }) {
     try {
       await deleteMatchReport(id);
       setReports((r) => r.filter((x) => x.id !== id));
+      onReportsChanged?.();
     } catch (e) { setError(e.message); }
   }
 
@@ -261,7 +277,7 @@ export default function PostMatch({ matchEvents = [] }) {
         ) : (
           <div className="pm-list">
             {reports.map((r) => (
-              <div key={r.id} className="pm-report-card" onClick={() => toggleExpand(r.id)}>
+              <div key={r.id} id={`report-${r.id}`} className="pm-report-card" onClick={() => toggleExpand(r.id)}>
                 <div className="pm-report-top">
                   <div>
                     <div className="pm-report-meta">
