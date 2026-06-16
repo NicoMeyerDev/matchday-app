@@ -537,3 +537,9 @@ h1 { margin: 0; font-size: 22px; font-weight: 700; }
   grid-template-columns: minmax(0, 1fr) 72px;
 }
  
+
+@media (max-height: 900px) {
+  .app-shell { padding: 14px 24px; }
+  .control-panel, .compact-control-panel { padding: 10px 16px; margin-bottom: 12px; }
+  h1 { font-size: 26px; }
+}
