@@ -77,6 +77,11 @@ export default function App() {
   // Referenz auf die MatchTimerBar, um Wechsel automatisch zu loggen
   const timerBarRef = useRef(null);
 
+  // Hält die ID des Spielberichts, der ab dem ersten Ereignis im Matchday automatisch
+  // angelegt wird, damit Ereignisse sofort einzeln gespeichert werden (Crash-Schutz).
+  const [activeMatchReportId, setActiveMatchReportId] = useState(null);
+  const matchReportCreationRef = useRef(null);
+
 
   // TODO: loadClub() macht einen direkten fetch() statt über api/client.js zu laufen.
   // Dadurch profitiert dieser Call NICHT vom automatischen Token-Refresh.
@@ -312,35 +317,62 @@ export default function App() {
     setUser(null);
   }
 
-  async function handleMatchEnd(events) {
-  if (!events || events.length === 0) return;
-  if (!selectedLineupId) {
-    setError("Keine Aufstellung ausgewählt – Bericht konnte nicht automatisch erstellt werden.");
-    return;
-  }
-  try {
-    const report = await createMatchReport({
+  // Legt beim ersten Ereignis automatisch einen Spielbericht an (falls noch keiner existiert).
+// Der Ref verhindert, dass bei zwei schnell aufeinanderfolgenden Ereignissen versehentlich
+// zwei Berichte gleichzeitig erstellt werden.
+async function ensureMatchReport() {
+  if (activeMatchReportId) return activeMatchReportId;
+  if (!matchReportCreationRef.current) {
+    matchReportCreationRef.current = createMatchReport({
       lineup: selectedLineupId,
       opponent: opponent || "",
       result: "",
       notes: "",
+    }).then((report) => {
+      setActiveMatchReportId(report.id);
+      return report.id;
+    }).finally(() => {
+      matchReportCreationRef.current = null;
     });
-    await Promise.all(events.map(ev => createMatchEvent({
-      match_report: report.id,
-      minute: ev.minute,
-      event_type: ev.type,
-      for_us: ev.for_us ?? true,
-      card_type: ev.card_type || "",
-      description: "",
-    })));
-    setMatchEvents([]);
-    setInfo("Spielbericht wurde automatisch erstellt.");
-    setCurrentPage("postmatch");
+  }
+  return matchReportCreationRef.current;
+}
+
+// Wird bei JEDEM Ereignis (Tor, Karte, Wechsel) sofort aufgerufen, statt erst am Spielende.
+async function handleLogEvent(event) {
+  if (!selectedLineupId) {
+    setError("Keine Aufstellung ausgewählt – Ereignis konnte nicht gespeichert werden.");
+    return;
+  }
+  try {
+    const reportId = await ensureMatchReport();
+    await createMatchEvent({
+      match_report: reportId,
+      minute: event.minute,
+      event_type: event.type,
+      for_us: event.for_us ?? true,
+      card_type: event.card_type || "",
+      description: event.label || "",
+    });
   } catch (e) {
-    setError(e.message);
+    setError("Ereignis konnte nicht gespeichert werden: " + e.message);
   }
 }
 
+  async function handleMatchEnd(events) {
+  // Ereignisse wurden bereits während des Spiels einzeln gespeichert (siehe handleLogEvent).
+  // Hier nur noch aufräumen und zur Übersicht wechseln.
+  const hadReport = !!activeMatchReportId;
+  setMatchEvents([]);
+  setActiveMatchReportId(null);
+  setInfo(
+    hadReport
+      ? "Spielbericht wurde laufend gespeichert."
+      : "Keine Ereignisse erfasst, es wurde kein Bericht erstellt."
+  );
+  setCurrentPage("postmatch");
+  await refreshMatchReports();
+}
   const renderPage = () => {
     switch (currentPage) {
       case "hub":
@@ -403,7 +435,7 @@ export default function App() {
             <Header selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
             {error && <div className="error-box">{error}</div>}
             {info && <div className="info-box">{info}</div>}
-            <MatchTimerBar ref={timerBarRef} onEventsUpdate={(e) => setMatchEvents(e)} onMatchEnd={handleMatchEnd} />
+            <MatchTimerBar ref={timerBarRef} onEventsUpdate={(e) => setMatchEvents(e)} onMatchEnd={handleMatchEnd} onLogEvent={handleLogEvent} />
             <MatchdayFormationBar
               lineups={lineups} selectedLineupId={selectedLineupId} onSelectLineup={handleSelectLineup} />
             <div className={`workspace no-drawer ${isBenchOpen || isNotesOpen ? "right-open" : "right-closed"}`}>

@@ -194,7 +194,7 @@ const S = `
 
 const TOTAL = 45 * 60;
 
-const MatchTimerBar = forwardRef(function MatchTimerBar({ onEventsUpdate, onMatchEnd }, ref) {
+const MatchTimerBar = forwardRef(function MatchTimerBar({ onEventsUpdate, onMatchEnd, onLogEvent }, ref) {
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(false);
   const [half, setHalf] = useState(1);
@@ -267,10 +267,12 @@ const MatchTimerBar = forwardRef(function MatchTimerBar({ onEventsUpdate, onMatc
   const progress = (elapsed / TOTAL) * 100;
 
   function addEvent(type, details) {
-    setEvents(prev => [...prev, { type, minute: currentMinute, ...details, id: Date.now() }]);
+    const event = { type, minute: currentMinute, ...details, id: Date.now() };
+    setEvents(prev => [...prev, event]);
     setActiveModal(null);
     setTorSide(null);
     setCardType(null);
+    if (onLogEvent) onLogEvent(event);
   }
 
   // Von außen aufrufbar (z.B. aus App.jsx beim Spielerwechsel):

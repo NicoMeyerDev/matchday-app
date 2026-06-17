@@ -83,14 +83,11 @@ export default function FormationSelector({
                   </div>
                 )}
               </div>
+              <button type="button" className="primary-button" onClick={onCreateLineup} disabled={isSaving}>
+                Speichern
+              </button>
             </div>
           </label>
-
-          <div className="action-row save-row">
-            <button type="button" className="primary-button" onClick={onCreateLineup} disabled={isSaving}>
-              Speichern
-            </button>
-          </div>
         </div>
       )}
     </section>

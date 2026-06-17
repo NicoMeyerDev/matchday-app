@@ -158,14 +158,14 @@ textarea { width: 100%; min-height: 160px; resize: vertical; border: 1px solid #
 
 .control-content {
   display: grid;
-  grid-template-columns: minmax(180px, 240px) minmax(260px, 1fr) auto;
+  grid-template-columns: minmax(180px, 240px) minmax(220px, 1fr) minmax(340px, auto);
   gap: 14px;
   align-items: end;
 }
 
 .saved-lineup-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 8px;
   align-items: center;
 }
