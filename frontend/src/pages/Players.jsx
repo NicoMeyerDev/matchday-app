@@ -724,7 +724,7 @@ function PlayerProfile({ player, onBack, onUpdate }) {
   );
 }
 
-export default function Players({ initialPlayerId } = {}) {
+export default function Players({ initialPlayerId, onPlayersChanged } = {}) {
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const consumedInitialPlayerRef = useRef(false);
@@ -766,6 +766,7 @@ export default function Players({ initialPlayerId } = {}) {
     const updated = await res.json();
     setPlayers(prev => prev.map(p => p.id === id ? updated : p));
     setSelectedPlayer(updated);
+    onPlayersChanged?.();
   }
 
   // Spieler nach Positionsgruppen gruppieren

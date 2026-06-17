@@ -23,6 +23,10 @@ export default function PlayerList({
   const onBenchIds = new Set(
     substitutes.map((sub) => sub.player_detail?.id || sub.player)
   );
+  // Verletzte und gesperrte Spieler werden in der Vorbereitung nicht zur Auswahl angezeigt.
+  const visiblePlayers = players.filter(
+    (p) => p.status !== "injured" && p.status !== "suspended"
+  );
   return (
     <aside className={`player-drawer ${isOpen ? "open" : "closed"}`}>
       <button
@@ -40,14 +44,6 @@ export default function PlayerList({
           <div className="section-title">
             <div className="section-header">
               <h2>Spieler</h2>
-
-              <button
-                type="button"
-                className="primary-button"
-                onClick={onAddPlayer}
-              >
-                + Spieler
-              </button>
             </div>
 
             <p>
@@ -57,7 +53,7 @@ export default function PlayerList({
           </div>
 
           <div className="player-list">
-  {players.map((player) => {
+  {visiblePlayers.map((player) => {
     const isSelected = selectedPlayerId === player.id;
     const isOnField = onFieldIds.has(player.id);
     const isOnBench = onBenchIds.has(player.id);

@@ -101,6 +101,10 @@ export default function App() {
   const fresh = await fetchMatchReports();
   setMatchReports(fresh);
   }
+  async function refreshPlayers() {
+  const fresh = await fetchPlayers();
+  setPlayers(fresh.filter((p) => p.is_active));
+  }
 
   const selectedFormation = useMemo(
     () => formations.find((f) => f.id === selectedFormationId),
@@ -116,12 +120,16 @@ export default function App() {
   }, [activePosition, assignedSlots]);
   const matchingPlayersForActivePosition = useMemo(() => {
     if (!activePosition) return [];
-    return players.filter((p) => playerMatchesPosition(p, activePosition.label));
+    return players
+    .filter((p) => p.status !== "injured" && p.status !== "suspended")
+    .filter((p) => playerMatchesPosition(p, activePosition.label));
   }, [activePosition, players]);
   const otherPlayersForActivePosition = useMemo(() => {
     if (!activePosition) return [];
     const matchingIds = new Set(matchingPlayersForActivePosition.map((p) => p.id));
-    return players.filter((p) => !matchingIds.has(p.id));
+    return players
+    .filter((p) => p.status !== "injured" && p.status !== "suspended")
+    .filter((p) => !matchingIds.has(p.id));
   }, [activePosition, matchingPlayersForActivePosition, players]);
 
   if (!user) {
@@ -360,7 +368,7 @@ export default function App() {
           <Layout user={user} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
             <main className="app-shell">
               <BackButton onClick={() => setCurrentPage("hub")} />
-              <PlayersPage initialPlayerId={hubPlayerTarget} />
+              <PlayersPage initialPlayerId={hubPlayerTarget} onPlayersChanged={refreshPlayers} />
             </main>
           </Layout>
         );

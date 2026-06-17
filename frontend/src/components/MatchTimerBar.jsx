@@ -182,6 +182,14 @@ const S = `
   .chip-yellow-red { border-color: #fb923c44; color: #fb923c; }
   .chip-red { border-color: #f8717144; color: #f87171; }
   .chip-wechsel { border-color: #60a5fa44; color: #60a5fa; }
+
+  @media (max-height: 900px) {
+    .timer-bar-root { padding: 6px 16px; }
+    .timer-bar-time { font-size: 28px; min-width: 70px; }
+    .timer-bar-half { font-size: 9px; padding: 1px 8px; }
+    .tbar-btn { padding: 5px 10px; font-size: 11px; }
+    .tbar-divider { height: 22px; }
+  }
 `;
 
 const TOTAL = 45 * 60;
@@ -196,19 +204,48 @@ const MatchTimerBar = forwardRef(function MatchTimerBar({ onEventsUpdate, onMatc
   const [cardType, setCardType] = useState(null);
   const intervalRef = useRef(null);
   const prevElapsedRef = useRef(0);
+  const accumulatedRef = useRef(0);
+  const startTimestampRef = useRef(null);
 
+    // Zeitstempel-basiert statt Hochzählen: robust gegen setInterval-Drosselung beim
+  // Sperren des Tablets. accumulatedRef hält Sekunden aus abgeschlossenen Lauf-
+  // Abschnitten, startTimestampRef den Start des aktuell laufenden Abschnitts.
   useEffect(() => {
-    if (running) {
-      intervalRef.current = setInterval(() => {
-        setElapsed(e => {
-          if (e >= TOTAL) { clearInterval(intervalRef.current); setRunning(false); return TOTAL; }
-          return e + 1;
-        });
-      }, 1000);
-    } else {
+    if (!running) {
       clearInterval(intervalRef.current);
+      return;
     }
+    intervalRef.current = setInterval(() => {
+      const secondsSinceStart = Math.floor((Date.now() - startTimestampRef.current) / 1000);
+      const total = accumulatedRef.current + secondsSinceStart;
+      if (total >= TOTAL) {
+        accumulatedRef.current = TOTAL;
+        setElapsed(TOTAL);
+        setRunning(false);
+        clearInterval(intervalRef.current);
+      } else {
+        setElapsed(total);
+      }
+    }, 1000);
     return () => clearInterval(intervalRef.current);
+  }, [running]);
+
+  // Sorgt dafür, dass die Anzeige sofort korrekt springt, sobald das Tablet
+  // entsperrt wird, statt bis zum nächsten Interval-Tick zu warten.
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (running && document.visibilityState === 'visible') {
+        const secondsSinceStart = Math.floor((Date.now() - startTimestampRef.current) / 1000);
+        const total = Math.min(accumulatedRef.current + secondsSinceStart, TOTAL);
+        setElapsed(total);
+        if (total >= TOTAL) {
+          accumulatedRef.current = TOTAL;
+          setRunning(false);
+        }
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [running]);
 
   useEffect(() => {
@@ -244,12 +281,24 @@ const MatchTimerBar = forwardRef(function MatchTimerBar({ onEventsUpdate, onMatc
     },
   }));
 
-  
+  function handleStartPause() {
+    if (running) {
+      const secondsSinceStart = Math.floor((Date.now() - startTimestampRef.current) / 1000);
+      accumulatedRef.current = Math.min(accumulatedRef.current + secondsSinceStart, TOTAL);
+      setElapsed(accumulatedRef.current);
+      setRunning(false);
+    } else {
+      startTimestampRef.current = Date.now();
+      setRunning(true);
+    }
+  }
+
   function handleStop() {
   clearInterval(intervalRef.current);
   setRunning(false);
   if (onMatchEnd) onMatchEnd(events);
   setHalf(1);
+  accumulatedRef.current = 0;
   setElapsed(0);
   setEvents([]);
   setActiveModal(null);
@@ -280,11 +329,11 @@ const MatchTimerBar = forwardRef(function MatchTimerBar({ onEventsUpdate, onMatc
           <div className="timer-bar-controls">
             <button
               className={`tbar-btn ${running ? 'pause' : 'start'}`}
-              onClick={() => setRunning(r => !r)}
+              onClick={handleStartPause}
             >
               {running ? '⏸ Pause' : '▶ Start'}
             </button>
-            <button className="tbar-btn" onClick={() => { clearInterval(intervalRef.current); setRunning(false); setHalf(2); setElapsed(0); }}>↺ HZ</button>
+            <button className="tbar-btn" onClick={() => { clearInterval(intervalRef.current); setRunning(false); setHalf(2); accumulatedRef.current = 0; setElapsed(0); }}>↺ HZ</button>
             <button className="tbar-btn" onClick={handleStop}>■</button>
             <div className="tbar-divider" />
             <button className="tbar-btn tor" onClick={() => setActiveModal(activeModal === 'tor' ? null : 'tor')}>⚽ Tor</button>
