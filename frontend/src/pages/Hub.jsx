@@ -16,16 +16,10 @@ const S = `
 
   /* SCHNELLZUGRIFF */
   .quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .quick-tile { background: #0a0a0f; border: 1px solid #141418; border-radius: 12px; padding: 28px 14px; text-align: center; cursor: pointer; transition: border-color 0.2s, transform 0.15s; border-top: 2px solid transparent; }
-  .quick-tile:hover { transform: translateY(-2px); }
-  .quick-tile.blue { border-top-color: #2563eb; }
-  .quick-tile.blue:hover { border-color: #2563eb; }
-  .quick-tile.green { border-top-color: #22c55e; }
-  .quick-tile.green:hover { border-color: #22c55e; }
-  .quick-tile.red { border-top-color: #dc2626; }
-  .quick-tile.red:hover { border-color: #dc2626; }
-  .quick-tile.gray { border-top-color: #3f3f46; opacity: 0.4; cursor: not-allowed; }
-  .quick-tile.gray:hover { transform: none; }
+  .quick-tile { background: #0a0a0f; border: 1px solid #141418; border-radius: 12px; padding: 28px 14px; text-align: center; cursor: pointer; transition: border-color 0.2s, transform 0.15s; }
+  .quick-tile:hover { transform: translateY(-2px); border-color: #22c55e; }
+  .quick-tile.gray { opacity: 0.4; cursor: not-allowed; }
+  .quick-tile.gray:hover { transform: none; border-color: #141418; }
   .qt-icon { font-size: 28px; margin-bottom: 12px; display: block; }
   .qt-label { font-size: 13px; color: #71717a; }
   .qt-soon { font-size: 10px; color: #2a2a35; margin-top: 4px; }
@@ -173,7 +167,7 @@ export default function Hub({ user, players, reports, onNavigate, onSelectPlayer
                     <div key={r.id} className="report-item" onClick={() => onSelectReport(r.id)} style={{cursor:'pointer'}}>
                       {r.result && <div className="report-result">{r.result}</div>}
                       <div>
-                        <div className="report-opponent">{r.opponent || 'Unbekannter Gegner'}</div>
+                        <div className="report-opponent">{r.opponent || 'Gegner noch nicht eingetragen'}</div>
                         <div className="report-date">{formatDate(r.created_at)}</div>
                       </div>
                     </div>

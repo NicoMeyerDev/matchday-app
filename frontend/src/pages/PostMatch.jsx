@@ -281,7 +281,7 @@ export default function PostMatch({ matchEvents = [], initialReportId = null, on
                 <div className="pm-report-top">
                   <div>
                     <div className="pm-report-meta">
-                      <div className="pm-report-opponent">{r.opponent || "Unbekannter Gegner"}</div>
+                      <div className="pm-report-opponent">{r.opponent || "Gegner noch nicht eingetragen"}</div>
                       {r.result && <div className="pm-report-result">{r.result}</div>}
                       <div className="pm-report-date">{formatDate(r.created_at)}</div>
                     </div>

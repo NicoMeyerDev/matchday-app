@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createLineup, deleteLineup, fetchFormations, fetchLineups, fetchPlayers, updateLineup, fetchMatchReports, createMatchReport, createMatchEvent  } from "./api/client";
+import { fetchCurrentUser,createLineup, deleteLineup, fetchFormations, fetchLineups, fetchPlayers, updateLineup, fetchMatchReports, createMatchReport, createMatchEvent  } from "./api/client";
 import Header from "./components/Header";
 import FormationSelector from "./components/FormationSelector";
 import PlayerList from "./components/PlayerList";
@@ -19,6 +19,7 @@ import Onboarding from "./pages/Onboarding";
 import MatchTimerBar from "./components/MatchTimerBar";
 import MatchdayFormationBar from "./components/MatchdayFormationBar";
 import BriefingModal from "./components/BriefingModal";
+import { useAutoDismiss } from "./hooks/useAutoDismiss";
 
 function BackButton({ onClick }) {
   return (
@@ -54,13 +55,13 @@ export default function App() {
   const [substitutes, setSubstitutes] = useState([]);
   const [notes, setNotes] = useState("");
   const [lineupTitle, setLineupTitle] = useState("MVP Testspiel");
-  const [opponent, setOpponent] = useState("Gegner offen");
+  const [opponent, setOpponent] = useState("Gegner noch nicht eingetragen");
   const [activePosition, setActivePosition] = useState(null);
   const [isPlayerDrawerOpen, setIsPlayerDrawerOpen] = useState(true);
   const [isBenchOpen, setIsBenchOpen] = useState(true);
   const [isNotesOpen, setIsNotesOpen] = useState(true);
-  const [error, setError] = useState("");
-  const [info, setInfo] = useState("");
+  const [error, setError] = useAutoDismiss("", 5000);
+  const [info, setInfo] = useAutoDismiss("", 4000);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isAddPlayerOpen, setIsAddPlayerOpen] = useState(false);
@@ -82,6 +83,22 @@ export default function App() {
   const [activeMatchReportId, setActiveMatchReportId] = useState(null);
   const matchReportCreationRef = useRef(null);
 
+
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      setIsCheckingAuth(false);
+      return;
+    }
+    fetchCurrentUser()
+      .then((userData) => setUser(userData))
+      .catch(() => {
+      // Token ungültig/abgelaufen, request() in client.js übernimmt forceLogout() bereits
+    })
+    .finally(() => setIsCheckingAuth(false));
+}, []);
 
   // TODO: loadClub() macht einen direkten fetch() statt über api/client.js zu laufen.
   // Dadurch profitiert dieser Call NICHT vom automatischen Token-Refresh.
@@ -136,6 +153,10 @@ export default function App() {
     .filter((p) => p.status !== "injured" && p.status !== "suspended")
     .filter((p) => !matchingIds.has(p.id));
   }, [activePosition, matchingPlayersForActivePosition, players]);
+
+  if (isCheckingAuth) {
+  return <main style={{ color: "#fff", padding: 40, background: "#07070a", minHeight: "100vh" }}>Lade Sitzung...</main>;
+  }
 
   if (!user) {
     if (authPage === "register") {
@@ -194,7 +215,7 @@ export default function App() {
     setSubstitutes(lineup.substitutes || []);
     setNotes(lineup.general_notes || "");
     setLineupTitle(lineup.title || "MVP Testspiel");
-    setOpponent(lineup.opponent || "Gegner offen");
+    setOpponent(lineup.opponent || "Gegner noch nicht eingetragen");
   }
 
   function handleSelectFormation(formationId) {
@@ -240,23 +261,112 @@ export default function App() {
   }
   
 
-  // Im Matchday: Spielerwechsel auslösen + automatisch Briefing öffnen + Wechsel auf Timeline loggen
-  function handleMatchdaySelectPlayer(player) {
-    const position = activePosition;
-    handleAssignPlayerToActivePosition(player);
-    if (!position || !player) return;
-
-    const neighbors = getNeighbors(position);
-    setBriefing({
-      position,
-      playerName: `#${player.shirt_number ?? "?"} ${player.name}`,
-      neighbors,
-    });
-
-    if (timerBarRef.current) {
-      timerBarRef.current.logWechsel(`${position.label}: ${player.name}`);
-    }
+  function isPlayerOnField(playerId) {
+  return Object.values(assignedSlots).some((slot) => slot.player === playerId);
   }
+
+  // Im Matchday: unterscheidet zwischen echtem Wechsel (Spieler kommt von der Bank)
+  // und reinem Positionstausch (Spieler steht schon auf dem Feld) - nur ersteres
+  // öffnet das Briefing-Modal und loggt ein Wechsel-Event.
+  function handleAssignPlayerToActivePosition(player) {
+    if (!activePosition || !player) return;
+
+    // Wer stand vorher auf der Ziel-Position? Und stand der gewählte Spieler
+    // selbst schon auf dem Feld (dann ist sourceSlotId gesetzt)?
+    const displacedPlayer = assignedSlots[activePosition.id]?.player_detail || null;
+    const sourceSlotId = Object.keys(assignedSlots).find(
+      (slotId) => assignedSlots[slotId].player === player.id
+    );
+    const isSwap = !!(displacedPlayer && sourceSlotId && Number(sourceSlotId) !== activePosition.id);
+
+    setAssignedSlots((s) => {
+      const cleaned = removePlayerFromField(player.id, s);
+      const updated = {
+        ...cleaned,
+        [activePosition.id]: {
+          id: `local-${activePosition.id}`,
+          position: activePosition.id,
+          position_detail: activePosition,
+          player: player.id,
+          player_detail: player,
+          instruction: "",
+        },
+      };
+      // Echter Tausch: verdrängter Spieler bekommt die alte Position des gewählten Spielers
+      if (isSwap) {
+        updated[sourceSlotId] = {
+          ...s[sourceSlotId],
+          player: displacedPlayer.id,
+          player_detail: displacedPlayer,
+        };
+    }
+      return updated;
+  });
+
+  setSelectedPlayerId(player.id);
+
+  setSubstitutes((s) => {
+    const withoutNewPlayer = s.filter(
+      (sub) => (sub.player_detail?.id || sub.player || sub.id) !== player.id
+    );
+    // Kam der neue Spieler von der Bank und hat jemanden vom Feld verdrängt?
+    // Dann wandert der Verdrängte auf die Bank, statt zu verschwinden.
+    if (displacedPlayer && !isSwap) {
+      return [
+        ...withoutNewPlayer,
+        { id: `local-bench-${displacedPlayer.id}`, player: displacedPlayer.id, player_detail: displacedPlayer, note: "" },
+      ];
+    }
+    return withoutNewPlayer;
+  });
+
+  setActivePosition(null);
+}
+
+  // Gibt alle anderen Positionen zurück (für die Spielfeld-Anzeige im Briefing)
+function getNeighbors(position) {
+  if (!selectedFormation) return [];
+  return selectedFormation.positions
+    .filter((p) => p.id !== position.id)
+    .map((p) => {
+      const player = assignedSlots[p.id]?.player_detail;
+      return {
+        label: p.label,
+        x: p.x,
+        y: p.y,
+        number: player?.shirt_number,
+        name: player?.name,
+      };
+    });
+}
+
+// Im Matchday: unterscheidet zwischen echtem Wechsel (Spieler kommt von der Bank)
+// und reinem Positionstausch (Spieler steht schon auf dem Feld) - nur ersteres
+// öffnet das Briefing-Modal und loggt ein Wechsel-Event.
+function handleMatchdaySelectPlayer(player) {
+  const position = activePosition;
+  if (!position || !player) return;
+
+  const wasOnField = isPlayerOnField(player.id);
+
+  handleAssignPlayerToActivePosition(player);
+
+  if (wasOnField) {
+    // Reiner Positionstausch - kein Wechsel-Event, kein Briefing
+    return;
+  }
+
+  const neighbors = getNeighbors(position);
+  setBriefing({
+    position,
+    playerName: `#${player.shirt_number ?? "?"} ${player.name}`,
+    neighbors,
+  });
+
+  if (timerBarRef.current) {
+    timerBarRef.current.logWechsel(`${position.label}: ${player.name}`);
+  }
+}
 
   function handleClearPosition(positionId) {
     setAssignedSlots((s) => { const n = { ...s }; delete n[positionId]; return n; });

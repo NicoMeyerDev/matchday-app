@@ -116,3 +116,18 @@ class CookieDeleteView(APIView):
         response.delete_cookie('refresh_token')
         return response
         
+
+class CurrentUserView(APIView):
+    '''
+    Returns the current authenticated user's information.
+    '''
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        data = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email
+        }
+        return Response(data)        

@@ -121,26 +121,26 @@ const S = `
   .ob-input::placeholder { color: #2a2a35; }
 
   .ob-btn {
-    width: 100%;
-    padding: 18px;
-    background: #22c55e;
-    color: #040f04;
-    border: none;
-    border-radius: 10px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 20px;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-  }
+  width: 100%;
+  padding: 18px;
+  background: #4ade80;
+  color: #0a0a0a;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
 
-  .ob-btn:hover { background: #16a34a; }
+  .ob-btn:hover { background: #86efac; }
   .ob-btn:active { transform: scale(0.99); }
   .ob-btn:disabled {
-    background: #0d2010;
-    color: #1a3a1a;
-    cursor: not-allowed;
-  }
+  background: #1a2e1a;
+  color: #2d5a2d;
+  cursor: not-allowed;
+}
 
   .ob-error {
     margin-top: 16px;

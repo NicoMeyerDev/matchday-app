@@ -99,4 +99,7 @@ export function deleteMatchReport(id) {
 // ── MatchEvent ──
 export function createMatchEvent(payload) {
   return request("/matchreports/events/", { method: "POST", body: JSON.stringify(payload) });
-}
+}  
+
+// ── Auth ──
+export function fetchCurrentUser() { return request("/auth/current-user/"); }
