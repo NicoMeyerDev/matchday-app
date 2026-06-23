@@ -507,7 +507,7 @@ async function handleLogEvent(event) {
       );
       case "players":
         return (
-          <Layout user={user} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
+          <Layout user={user} club={club} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
             <main className="app-shell">
               <BackButton onClick={() => setCurrentPage("hub")} />
               <PlayersPage initialPlayerId={hubPlayerTarget} onPlayersChanged={refreshPlayers} />
@@ -571,7 +571,7 @@ async function handleLogEvent(event) {
         );
       default:
         return (
-          <Layout user={user} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
+          <Layout user={user} club={club} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
             <Hub user={user} players={players} onNavigate={setCurrentPage} />
           </Layout>
         );

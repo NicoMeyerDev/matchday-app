@@ -177,7 +177,7 @@ const S = `
   .layout-main.collapsed { margin-left: 64px; }
 `;
 
-export default function Layout({ user, onLogout, currentPage, onNavigate, children }) {
+export default function Layout({ user, club, onLogout, currentPage, onNavigate, children }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const navItems = [
@@ -206,8 +206,7 @@ export default function Layout({ user, onLogout, currentPage, onNavigate, childr
           <div className="sidebar-club">
             <div className="club-badge">⚽</div>
             <div className="hide-on-collapse">
-              <div className="club-name">Mein Verein</div>
-              <div className="club-team">1. Herren</div>
+              <div className="club-name">{club?.name || "Mein Verein"}</div>
             </div>
           </div>
 
