@@ -487,7 +487,7 @@ async function handleLogEvent(event) {
     switch (currentPage) {
       case "hub":
         return (
-          <Layout user={user} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
+          <Layout user={user} club={club} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
             <Hub
               user={user}
               players={players}
