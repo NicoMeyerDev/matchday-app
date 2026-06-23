@@ -354,11 +354,15 @@ const S = `
     width: 28px; height: 28px;
     border-radius: 6px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 11px;
+    font-size: 12px;
     color: #2a2a35;
     background: #111116;
     border: 1px solid #1a1a1a;
   }
+
+  input[type=number].edit-input::-webkit-inner-spin-button,
+  input[type=number].edit-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number].edit-input { -moz-appearance: textfield; }
 
   .dev-placeholder {
     height: 80px;
@@ -480,11 +484,68 @@ const POSITION_DOTS = {
   LF: { x: 20, y: 25 }, RF: { x: 80, y: 25 }, ST: { x: 50, y: 15 }, STL: { x: 35, y: 18 }, STR: { x: 65, y: 18 },
 };
 
-const ATTRS = {
-  technical: ['Dribbling', 'Passspiel', 'Schuss', 'Technik', 'Kopfball', 'Standards'],
-  mental: ['Einsatz', 'Konzentration', 'Entscheidung', 'Führung', 'Teamwork', 'Pressing'],
-  physical: ['Tempo', 'Ausdauer', 'Stärke', 'Agilität', 'Sprung', 'Balance'],
-};
+const ATTRS_SHARED = [
+  {
+    cat: 'Mental',
+    fields: [
+      { label: 'Einsatz',       key: 'attr_einsatz' },
+      { label: 'Entscheidung',  key: 'attr_entscheidung' },
+      { label: 'Konzentration', key: 'attr_konzentration' },
+      { label: 'Teamwork',      key: 'attr_teamwork' },
+    ],
+  },
+  {
+    cat: 'Physisch',
+    fields: [
+      { label: 'Schnelligkeit',   key: 'attr_schnelligkeit' },
+      { label: 'Ausdauer',        key: 'attr_ausdauer' },
+      { label: 'Zweikampfstärke', key: 'attr_zweikampfstaerke' },
+      { label: 'Kraft',           key: 'attr_kraft' },
+    ],
+  },
+];
+
+const ATTRS_FIELD = [
+  {
+    cat: 'Technisch',
+    fields: [
+      { label: 'Passspiel',     key: 'attr_passspiel' },
+      { label: 'Schuss',        key: 'attr_schuss' },
+      { label: 'Dribbling',     key: 'attr_dribbling' },
+      { label: 'Ballkontrolle', key: 'attr_ballkontrolle' },
+    ],
+  },
+  ...ATTRS_SHARED,
+];
+
+const ATTRS_GK = [
+  {
+    cat: 'Technisch',
+    fields: [
+      { label: 'Passspiel',     key: 'attr_passspiel' },
+      { label: 'Abschlag',      key: 'attr_abschlag' },
+      { label: 'Reflexe',       key: 'attr_reflexe' },
+      { label: 'Ballkontrolle', key: 'attr_ballkontrolle' },
+    ],
+  },
+  ...ATTRS_SHARED,
+];
+
+// Alle möglichen Attribut-Keys (für form-State und Speichern)
+const ALL_ATTR_KEYS = [...new Set(
+  [...ATTRS_FIELD, ...ATTRS_GK].flatMap(g => g.fields.map(f => f.key))
+)];
+
+function isGoalkeeper(positions) {
+  return positions?.toUpperCase().split(/[\s,]+/).map(p => p.trim()).includes('TW') ?? false;
+}
+
+function attrColor(v) {
+  if (v == null || v === '') return '#2a2a35';
+  if (v <= 4) return '#ef4444';
+  if (v <= 7) return '#fbbf24';
+  return '#22c55e';
+}
 
 const POSITION_GROUPS = [
   { label: 'Tor', positions: ['TW'] },
@@ -597,6 +658,9 @@ function AddPlayerModal({ onClose, onSaved }) {
 
 function PlayerProfile({ player, onBack, onUpdate }) {
   const [editMode, setEditMode] = useState(false);
+  const attrDefaults = Object.fromEntries(
+    ALL_ATTR_KEYS.map(k => [k, player[k] ?? ''])
+  );
   const [form, setForm] = useState({
     name: player.name || '',
     shirt_number: player.shirt_number || '',
@@ -604,25 +668,30 @@ function PlayerProfile({ player, onBack, onUpdate }) {
     foot: player.foot || '',
     status: player.status || 'available',
     notes: player.notes || '',
+    ...attrDefaults,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   async function handleSave() {
-  setSaving(true);
-  setError('');
-  try {
-    await onUpdate(player.id, {
-      ...form,
-      preferred_positions: form.preferred_positions.toUpperCase(),
-    });
-    setEditMode(false);
-  } catch (e) {
-    setError(e.message);
-  } finally {
-    setSaving(false);
+    setSaving(true);
+    setError('');
+    try {
+      const attrPayload = Object.fromEntries(
+        ALL_ATTR_KEYS.map(k => [k, form[k] === '' ? null : Number(form[k])])
+      );
+      await onUpdate(player.id, {
+        ...form,
+        preferred_positions: form.preferred_positions.toUpperCase(),
+        ...attrPayload,
+      });
+      setEditMode(false);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
   }
-}
 
   const statusInfo = STATUS_LABELS[form.status] || STATUS_LABELS.available;
 
@@ -699,17 +768,39 @@ function PlayerProfile({ player, onBack, onUpdate }) {
 
         <div className="right-col">
           <div className="card">
-            <div className="card-label">Attribute — Bewertung folgt</div>
+            <div className="card-label">Attribute</div>
             <div className="attr-grid">
-              {Object.entries({ Technisch: ATTRS.technical, Mental: ATTRS.mental, Physisch: ATTRS.physical }).map(([cat, attrs]) => (
+              {(isGoalkeeper(form.preferred_positions) ? ATTRS_GK : ATTRS_FIELD).map(({ cat, fields }) => (
                 <div key={cat}>
                   <div className="attr-category-title">{cat}</div>
-                  {attrs.map(a => (
-                    <div key={a} className="attr-item">
-                      <span className="attr-name">{a}</span>
-                      <span className="attr-placeholder">—</span>
-                    </div>
-                  ))}
+                  {fields.map(({ label, key }) => {
+                    const val = form[key];
+                    const color = attrColor(val === '' ? null : Number(val));
+                    return (
+                      <div key={key} className="attr-item">
+                        <span className="attr-name">{label}</span>
+                        {editMode ? (
+                          <input
+                            type="number"
+                            min="1"
+                            max="10"
+                            className="edit-input"
+                            style={{ width: '52px', textAlign: 'center', color }}
+                            value={val}
+                            onChange={e => setForm({ ...form, [key]: e.target.value })}
+                            placeholder="—"
+                          />
+                        ) : (
+                          <span
+                            className="attr-placeholder"
+                            style={{ color, borderColor: val ? color + '44' : undefined, fontWeight: val ? 600 : undefined }}
+                          >
+                            {val !== '' && val != null ? val : '—'}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
             </div>

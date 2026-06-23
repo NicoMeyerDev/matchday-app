@@ -19,6 +19,25 @@ class Player(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Technisch (Feldspieler)
+    attr_passspiel = models.PositiveSmallIntegerField(null=True, blank=True)
+    attr_schuss = models.PositiveSmallIntegerField(null=True, blank=True)
+    attr_dribbling = models.PositiveSmallIntegerField(null=True, blank=True)
+    attr_ballkontrolle = models.PositiveSmallIntegerField(null=True, blank=True)
+    # Technisch (Torhüter)
+    attr_abschlag = models.PositiveSmallIntegerField(null=True, blank=True)
+    attr_reflexe = models.PositiveSmallIntegerField(null=True, blank=True)
+    # Mental
+    attr_einsatz = models.PositiveSmallIntegerField(null=True, blank=True)
+    attr_entscheidung = models.PositiveSmallIntegerField(null=True, blank=True)
+    attr_konzentration = models.PositiveSmallIntegerField(null=True, blank=True)
+    attr_teamwork = models.PositiveSmallIntegerField(null=True, blank=True)
+    # Physisch
+    attr_schnelligkeit = models.PositiveSmallIntegerField(null=True, blank=True)
+    attr_ausdauer = models.PositiveSmallIntegerField(null=True, blank=True)
+    attr_zweikampfstaerke = models.PositiveSmallIntegerField(null=True, blank=True)
+    attr_kraft = models.PositiveSmallIntegerField(null=True, blank=True)
+
     """Gibt einen lesbaren Namen für Django-Admin und Debugging zurück."""
     def __str__(self):
         
