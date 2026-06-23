@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { fetchCurrentUser,createLineup, deleteLineup, fetchFormations, fetchLineups, fetchPlayers, updateLineup, fetchMatchReports, createMatchReport, createMatchEvent  } from "./api/client";
+import { fetchCurrentUser,createLineup, deleteLineup, fetchFormations, fetchLineups, fetchPlayers, updateLineup, fetchMatchReports, createMatchReport, createMatchEvent, finalizeMatchReport  } from "./api/client";
 import Header from "./components/Header";
 import FormationSelector from "./components/FormationSelector";
 import PlayerList from "./components/PlayerList";
@@ -19,6 +19,7 @@ import Onboarding from "./pages/Onboarding";
 import MatchTimerBar from "./components/MatchTimerBar";
 import MatchdayFormationBar from "./components/MatchdayFormationBar";
 import BriefingModal from "./components/BriefingModal";
+import LineupExportButton from "./components/LineupExportButton";
 import { useAutoDismiss } from "./hooks/useAutoDismiss";
 
 function BackButton({ onClick }) {
@@ -470,14 +471,19 @@ async function handleLogEvent(event) {
 }
 
   async function handleMatchEnd(events) {
-  // Ereignisse wurden bereits während des Spiels einzeln gespeichert (siehe handleLogEvent).
-  // Hier nur noch aufräumen und zur Übersicht wechseln.
   const hadReport = !!activeMatchReportId;
+  if (hadReport) {
+    try {
+      await finalizeMatchReport(activeMatchReportId);
+    } catch (e) {
+      // Ergebnis konnte nicht automatisch gesetzt werden — kein harter Fehler
+    }
+  }
   setMatchEvents([]);
   setActiveMatchReportId(null);
   setInfo(
     hadReport
-      ? "Spielbericht wurde laufend gespeichert."
+      ? "Spielbericht gespeichert – Ergebnis automatisch eingetragen."
       : "Keine Ereignisse erfasst, es wurde kein Bericht erstellt."
   );
   setCurrentPage("postmatch");
@@ -522,6 +528,9 @@ async function handleLogEvent(event) {
             {error && <div className="error-box">{error}</div>}
             {info && <div className="info-box">{info}</div>}
             <FormationSelector formations={formations} lineups={lineups} selectedFormationId={selectedFormationId} selectedLineupId={selectedLineupId} isSaving={isSaving} lineupTitle={lineupTitle} opponent={opponent} onLineupTitleChange={setLineupTitle} onOpponentChange={setOpponent} onSelectFormation={handleSelectFormation} onSelectLineup={handleSelectLineup} onCreateLineup={handleCreateLineup} onUpdateLineup={handleUpdateLineup} onDeleteLineup={handleDeleteLineup} />
+            <div style={{ display: "flex", justifyContent: "flex-end", padding: "0 12px 8px" }}>
+              <LineupExportButton formation={selectedFormation} assignedSlots={assignedSlots} club={club} lineupTitle={lineupTitle} opponent={opponent} />
+            </div>
             <div className={`workspace ${isPlayerDrawerOpen ? "drawer-open" : "drawer-closed"} ${isBenchOpen || isNotesOpen ? "right-open" : "right-closed"}`}>
               <div className={mobileTab !== "spieler" ? "mobile-hidden" : ""}>
                 <PlayerList players={players} selectedPlayerId={selectedPlayerId} isOpen={isPlayerDrawerOpen} assignedSlots={assignedSlots} substitutes={substitutes} onToggle={() => setIsPlayerDrawerOpen((s) => !s)} onSelectPlayer={setSelectedPlayerId} onAddToBench={handleAddToBench} onAddPlayer={() => setIsAddPlayerOpen(true)} />

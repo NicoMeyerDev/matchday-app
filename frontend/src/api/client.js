@@ -96,6 +96,10 @@ export function deleteMatchReport(id) {
   return request(`/matchreports/${id}/`, { method: "DELETE" });
 }
 
+export function finalizeMatchReport(id) {
+  return request(`/matchreports/${id}/finalize/`, { method: "POST" });
+}
+
 // ── MatchEvent ──
 export function createMatchEvent(payload) {
   return request("/matchreports/events/", { method: "POST", body: JSON.stringify(payload) });
