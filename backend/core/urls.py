@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/lineups/', include('lineups.urls')),
     path('api/matchreports/', include('matchreport.urls')),
     path('api/clubs/', include('clubs.urls')),
+    path('api/training' ,include ('training.urls')),
 
     # Catch-all: liefert die React-App für alle übrigen Pfade aus
     # (muss als letztes stehen, sonst würden API-Routen verschluckt)
