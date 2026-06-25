@@ -107,3 +107,10 @@ export function createMatchEvent(payload) {
 
 // ── Auth ──
 export function fetchCurrentUser() { return request("/auth/current-user/"); }
+
+// ── Training ──
+export function fetchTrainings() { return request("/training/trainings/"); }
+
+export function createTraining(payload) {
+  return request("/training/trainings/", { method: "POST", body: JSON.stringify(payload) });
+}

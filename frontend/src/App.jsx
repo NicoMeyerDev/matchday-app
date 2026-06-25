@@ -21,6 +21,7 @@ import MatchdayFormationBar from "./components/MatchdayFormationBar";
 import BriefingModal from "./components/BriefingModal";
 import LineupExportButton from "./components/LineupExportButton";
 import { useAutoDismiss } from "./hooks/useAutoDismiss";
+import TrainingsHub from "./pages/TrainingsHub";
 
 function BackButton({ onClick }) {
   return (
@@ -518,6 +519,12 @@ async function handleLogEvent(event) {
               <BackButton onClick={() => setCurrentPage("hub")} />
               <PlayersPage initialPlayerId={hubPlayerTarget} onPlayersChanged={refreshPlayers} />
             </main>
+          </Layout>
+        );
+      case "training":
+        return (
+          <Layout user={user} club={club} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
+            <TrainingsHub onBack={() => setCurrentPage("hub")} />
           </Layout>
         );
       case "preparation":
