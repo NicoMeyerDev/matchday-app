@@ -1,82 +1,130 @@
-# Matchday Coaching App – MVP
+# Matchday Coaching App
 
-## Ziel
-Dieses MVP ist eine erste lauffähige Version einer tablet-tauglichen Coaching-App für Fußballtrainer.
+Eine tablet-optimierte Coaching-App für Fußballtrainer – entwickelt für den Einsatz direkt am Spielfeldrand.
 
-Der Trainer kann:
-- Spieler anzeigen
-- Formation auswählen
-- Spieler auf Positionen setzen
-- Ersatzspieler auf die Bank setzen
-- kurze Anweisungen speichern
+🔗 **Live-Demo:** [matchday-app-lqai.onrender.com](https://matchday-app-lqai.onrender.com)
 
-Nicht enthalten:
-- Login
-- Rollen/Rechte
-- Heatmaps
-- Analysemodul
-- KI-Funktionen
-- Mehrvereinsfähigkeit
+---
+
+## Inhaltsverzeichnis
+
+1. [Über das Projekt](#über-das-projekt)
+2. [Features](#features)
+3. [Screenshots](#screenshots)
+4. [Projektstruktur](#projektstruktur)
+5. [Installation & Start](#installation--start)
+6. [API-Endpunkte](#api-endpunkte)
+7. [Datenmodelle](#datenmodelle)
+8. [Roadmap](#roadmap)
+
+---
+
+## Über das Projekt
+
+Die Matchday Coaching App unterstützt Fußballtrainer bei der Spielvorbereitung, Aufstellungsplanung und Spieltagssteuerung. Die App ist für den Einsatz auf Tablets im Querformat optimiert und läuft als Progressive Web App direkt im Browser.
+
+**Tech-Stack:**
+- **Backend:** Django REST Framework, PostgreSQL, JWT-Authentifizierung
+- **Frontend:** React, Vite
+- **Deployment:** Render
+
+---
+
+## Features
+
+### Aktuell verfügbar
+- **Authentifizierung** – Registrierung und Login mit JWT
+- **Kader** – Spielerverwaltung mit Rückennummer, Position und Attributen (Technisch / Mental / Physisch)
+- **Vorbereitung** – Aufstellungsplanung mit Formation, Startelf und Bank; kurze Anweisungen pro Spieler
+- **Matchday** – Live-Spieltagsansicht mit Spieltimer, Wechseln, Wechsel-Briefing (FM-Look), Torereignissen und Karten
+- **Post-Match** – Automatische Berichterstellung mit Spielergebnis aus Events, Notizen und Spieleranalyse
+- **Trainingshub** – Trainingsplanung mit automatisch generierten Trainingsblöcken (Aktivierung, Spielform 1, Zwischenblock, Spielform 2)
+
+### Nicht enthalten (geplant)
+- Rollen- und Rechtesystem (Trainer / Spieler)
+- Mehrvereinsfähigkeit / Multi-Tenant
+- KI-basierte Spielanalyse
+- Taktikboard mit Zeichenfunktion
+
+---
+
+## Screenshots
+
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### Kader
+![Kader](screenshots/kader.png)
+
+### Vorbereitung
+![Vorbereitung](screenshots/vorbereitung.png)
+
+### Matchday
+![Matchday](screenshots/matchday.png)
+
+### Wechsel-Briefing
+![Wechsel-Briefing](screenshots/briefing.png)
+
+### Post-Match Bericht
+![Post-Match](screenshots/postmatch.png)
+
+### Trainingshub
+![Trainingshub](screenshots/trainingshub.png)
 
 ---
 
 ## Projektstruktur
 
-```txt
+```
 matchday_mvp/
 ├── backend/
-│   ├── core/
-│   ├── players/
-│   ├── formations/
-│   ├── lineups/
+│   ├── core/               # Settings, URLs
+│   ├── auth_app/           # Registrierung & Login
+│   ├── players/            # Spielerverwaltung & Attribute
+│   ├── formations/         # Formationen & Positionen
+│   ├── lineups/            # Aufstellungen & Bank
+│   ├── matchreport/        # Spielberichte & Events
+│   ├── training/           # Trainingshub & Blöcke
+│   ├── clubs/              # Vereinsverwaltung
 │   ├── manage.py
 │   └── requirements.txt
 │
 └── frontend/
-    ├── src/
-    │   ├── api/
-    │   ├── components/
-    │   ├── pages/
-    │   └── styles/
-    ├── index.html
-    └── package.json
+    └── src/
+        ├── api/            # Axios-Requests
+        ├── components/     # Wiederverwendbare UI-Komponenten
+        ├── pages/          # Seitenkomponenten
+        ├── hooks/          # Custom Hooks
+        └── utils/          # Hilfsfunktionen
 ```
 
 ---
 
-## Backend starten
+## Installation & Start
+
+### Voraussetzungen
+- Python 3.12+
+- Node.js v22+
+
+### Backend starten
 
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate   # Linux/Mac
-# venv\Scripts\activate    # Windows
+
+# Linux/Mac
+source venv/bin/activate
+# Windows
+venv\Scripts\activate
 
 pip install -r requirements.txt
-python manage.py makemigrations
 python manage.py migrate
-python manage.py seed_formations
-python manage.py seed_players
 python manage.py runserver
 ```
 
-Backend läuft dann unter:
+Backend läuft unter: `http://localhost:8000/api/`
 
-```txt
-http://localhost:8000/api/
-```
-
-Wichtige Endpunkte:
-
-```txt
-/api/players/
-/api/formations/
-/api/lineups/
-```
-
----
-
-## Frontend starten
+### Frontend starten
 
 ```bash
 cd frontend
@@ -84,53 +132,64 @@ npm install
 npm run dev
 ```
 
-Frontend läuft dann unter:
-
-```txt
-http://localhost:5173
-```
+Frontend läuft unter: `http://localhost:5173`
 
 ---
 
-## MVP-Datenfluss
+## API-Endpunkte
 
-1. Frontend lädt Spieler und Formationen aus dem Backend.
-2. Trainer wählt eine Formation.
-3. Trainer wählt einen Spieler.
-4. Trainer klickt eine Position auf dem Spielfeld.
-5. Frontend zeigt die Zuweisung sofort an.
-6. Backend speichert die Zuweisung in einer Lineup-Struktur.
+| Endpunkt | Methoden | Beschreibung |
+|---|---|---|
+| `/api/auth/register/` | POST | Registrierung |
+| `/api/auth/login/` | POST | Login |
+| `/api/players/` | GET, POST, PATCH, DELETE | Spielerverwaltung |
+| `/api/formations/` | GET | Formationen (readonly) |
+| `/api/lineups/` | GET, POST, PATCH | Aufstellungen |
+| `/api/matchreports/` | GET, POST, PATCH | Spielberichte |
+| `/api/matchevents/` | GET, POST, DELETE | Spielereignisse |
+| `/api/clubs/` | GET, POST | Vereinsdaten |
+| `/api/training/` | GET, POST, PATCH, DELETE | Trainingseinheiten |
 
 ---
 
-## Wichtige Models
+## Datenmodelle
 
 ### Player
-Speichert einzelne Spieler mit Name, Rückennummer, Positionen und Notizen.
+Spieler mit Name, Rückennummer, Positionen, Attributen (12 Attribute in 3 Kategorien) und Torhüter-spezifischen Overrides.
 
-### Formation
-Speichert eine Formation wie 4-4-2 oder 4-3-3.
+### Formation / FormationPosition
+Formation (z.B. 4-3-3) mit einzelnen Positionen inkl. x/y-Koordinaten für das Spielfeld.
 
-### FormationPosition
-Speichert einzelne Positionen innerhalb einer Formation inklusive x/y-Koordinaten für das Spielfeld.
+### Lineup / LineupSlot / LineupSubstitute
+Konkrete Aufstellung für ein Spiel mit Startelf-Positionen und Ersatzspielern auf der Bank.
 
-### Lineup
-Speichert eine konkrete Aufstellung für ein Spiel.
+### MatchReport / MatchEvent
+Spielbericht mit automatisch berechnetem Ergebnis aus Events (Tore, Karten, Wechsel).
 
-### LineupSlot
-Verbindet eine Position mit einem Spieler.
-
-### LineupSubstitute
-Speichert Ersatzspieler auf der Bank.
+### Training / TrainingsBlock
+Trainingseinheit mit automatisch generierten klassischen Blöcken bei Erstellung.
 
 ---
 
-## Nächste sinnvolle Ausbaustufen
+## Roadmap
 
-1. Drag & Drop statt Klick-Zuweisung
-2. Spieler erstellen im Frontend
-3. Lineup-Auswahl und mehrere Spiele
-4. Wechselmodus: Spieler raus / Spieler rein
-5. Login und Verein/Team-Struktur
-6. Speicherung mehrerer Boards pro Spiel
-7. Export als PDF oder Bild
+### Phase 1 – Demo-Ready (bis Juli 2025)
+- [x] Authentifizierung
+- [x] Kader & Attribute
+- [x] Vorbereitung & Aufstellung
+- [x] Matchday mit Wechsel-Briefing
+- [x] Post-Match Bericht
+- [x] Trainingshub
+
+### Phase 2 – Hinrunde
+- [ ] Übungsdatenbank im Trainingshub
+- [ ] Taktikboard
+
+### Phase 3 – Rückrunde
+- [ ] Spieler-Accounts mit Rollenystem
+- [ ] LLM-basierte Spielanalyse
+
+### Langfristig
+- [ ] Multi-Tenant (mehrere Vereine/Teams)
+- [ ] App Store Distribution
+
