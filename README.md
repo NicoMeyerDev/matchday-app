@@ -1,4 +1,4 @@
-# Matchday Coaching App
+# 🏟️ Matchday Coaching App
 
 Eine tablet-optimierte Coaching-App für Fußballtrainer – entwickelt für den Einsatz direkt am Spielfeldrand.
 
@@ -16,15 +16,18 @@ Eine tablet-optimierte Coaching-App für Fußballtrainer – entwickelt für den
 6. [API-Endpunkte](#api-endpunkte)
 7. [Datenmodelle](#datenmodelle)
 8. [Roadmap](#roadmap)
+9. [Tech Stack](#tech-stack)
 
 ---
 
 ## Über das Projekt
 
-Die Matchday Coaching App unterstützt Fußballtrainer bei der Spielvorbereitung, Aufstellungsplanung und Spieltagssteuerung. Die App ist für den Einsatz auf Tablets im Querformat optimiert und läuft als Progressive Web App direkt im Browser.
+Die Matchday Coaching App unterstützt Fußballtrainer im Amateurfußball bei Spielvorbereitung, Aufstellungsplanung und Spieltagssteuerung. Der Kern der App (**USP**) ist das Live-Matchday-Modul mit Substitutions-Briefings, Spielzeit-Timer und Echtzeit-Spielsteuerung — direkt auf dem Tablet am Spielfeldrand.
+
+Langfristig wächst die App zu einer Gesamtplattform für Vereinsverwaltung, Training, Taktik und Analyse.
 
 **Tech-Stack:**
-- **Backend:** Django REST Framework, PostgreSQL, JWT-Authentifizierung
+- **Backend:** Django REST Framework, PostgreSQL (Migration geplant), JWT-Auth via httpOnly-Cookies
 - **Frontend:** React, Vite
 - **Deployment:** Render
 
@@ -33,16 +36,17 @@ Die Matchday Coaching App unterstützt Fußballtrainer bei der Spielvorbereitung
 ## Features
 
 ### Aktuell verfügbar
-- **Authentifizierung** – Registrierung und Login mit JWT
-- **Kader** – Spielerverwaltung mit Rückennummer, Position und Attributen (Technisch / Mental / Physisch)
-- **Vorbereitung** – Aufstellungsplanung mit Formation, Startelf und Bank; kurze Anweisungen pro Spieler
-- **Matchday** – Live-Spieltagsansicht mit Spieltimer, Wechseln, Wechsel-Briefing (FM-Look), Torereignissen und Karten
+
+- **Authentifizierung** – Registrierung, Login und Logout mit JWT; Onboarding-Flow zum Verein erstellen
+- **Kader** – Spielerverwaltung mit Rückennummer, Position, Kaderstatus und Attributen (Technisch / Mental / Physisch, Torwart-spezifische Overrides)
+- **Vorbereitung** – Aufstellungsplanung mit Formation, Startelf und Bank; Spieleranweisungen; verletzte/gesperrte Spieler ausgeblendet
+- **Matchday** – Live-Spieltagsansicht mit zeitstempel-basiertem 45-Min-Timer (robust gegen Tablet-Sperren), Wechseln, Wechsel-Briefing (FM-Look mit Animation), Torereignissen und Karten; Events werden laufend gespeichert (Crash-Schutz)
 - **Post-Match** – Automatische Berichterstellung mit Spielergebnis aus Events, Notizen und Spieleranalyse
-- **Trainingshub** – Trainingsplanung mit automatisch generierten Trainingsblöcken (Aktivierung, Spielform 1, Zwischenblock, Spielform 2)
+- **Trainingshub** – Trainingsplanung mit automatisch generierten Blöcken (Aktivierung / Spielform 1 / Zwischenblock / Spielform 2)
 
 ### Nicht enthalten (geplant)
-- Rollen- und Rechtesystem (Trainer / Spieler)
-- Mehrvereinsfähigkeit / Multi-Tenant
+- Rollen- und Rechtesystem (Trainer / Spieler-Accounts)
+- Mehrvereinsfähigkeit / Multi-Tenant-Architektur
 - KI-basierte Spielanalyse
 - Taktikboard mit Zeichenfunktion
 
@@ -81,20 +85,20 @@ matchday_mvp/
 │   ├── core/               # Settings, URLs
 │   ├── auth_app/           # Registrierung & Login
 │   ├── players/            # Spielerverwaltung & Attribute
-│   ├── formations/         # Formationen & Positionen
+│   ├── formations/         # Formationen & Positionen (readonly)
 │   ├── lineups/            # Aufstellungen & Bank
 │   ├── matchreport/        # Spielberichte & Events
 │   ├── training/           # Trainingshub & Blöcke
-│   ├── clubs/              # Vereinsverwaltung
+│   ├── clubs/              # Vereinsverwaltung & Einladungsfunktion
 │   ├── manage.py
 │   └── requirements.txt
 │
 └── frontend/
     └── src/
-        ├── api/            # Axios-Requests
+        ├── api/            # Axios-Requests & Auto-Refresh bei 401
         ├── components/     # Wiederverwendbare UI-Komponenten
         ├── pages/          # Seitenkomponenten
-        ├── hooks/          # Custom Hooks
+        ├── hooks/          # Custom Hooks (z.B. useAutoDismiss)
         └── utils/          # Hilfsfunktionen
 ```
 
@@ -142,6 +146,7 @@ Frontend läuft unter: `http://localhost:5173`
 |---|---|---|
 | `/api/auth/register/` | POST | Registrierung |
 | `/api/auth/login/` | POST | Login |
+| `/api/auth/logout/` | POST | Logout |
 | `/api/players/` | GET, POST, PATCH, DELETE | Spielerverwaltung |
 | `/api/formations/` | GET | Formationen (readonly) |
 | `/api/lineups/` | GET, POST, PATCH | Aufstellungen |
@@ -155,7 +160,7 @@ Frontend läuft unter: `http://localhost:5173`
 ## Datenmodelle
 
 ### Player
-Spieler mit Name, Rückennummer, Positionen, Attributen (12 Attribute in 3 Kategorien) und Torhüter-spezifischen Overrides.
+Spieler mit Name, Rückennummer, Positionen und 12 Attributen in 3 Kategorien (Technisch / Mental / Physisch). Torwart-spezifische Overrides (Abschlag, Reflexe).
 
 ### Formation / FormationPosition
 Formation (z.B. 4-3-3) mit einzelnen Positionen inkl. x/y-Koordinaten für das Spielfeld.
@@ -164,32 +169,50 @@ Formation (z.B. 4-3-3) mit einzelnen Positionen inkl. x/y-Koordinaten für das S
 Konkrete Aufstellung für ein Spiel mit Startelf-Positionen und Ersatzspielern auf der Bank.
 
 ### MatchReport / MatchEvent
-Spielbericht mit automatisch berechnetem Ergebnis aus Events (Tore, Karten, Wechsel).
+Spielbericht mit automatisch berechnetem Ergebnis aus Events (Tore, Karten, Wechsel). Events werden laufend gespeichert.
 
 ### Training / TrainingsBlock
 Trainingseinheit mit automatisch generierten klassischen Blöcken bei Erstellung.
+
+### Club
+Vereinsdaten mit Einladungsfunktion (Einladungslink für Spieler/Trainer).
 
 ---
 
 ## Roadmap
 
-### Phase 1 – Demo-Ready (bis Juli 2025)
-- [x] Authentifizierung
+### Phase 1 – Demo-Ready (Ziel: 10. Juli 2026)
+- [x] Authentifizierung & Onboarding
 - [x] Kader & Attribute
 - [x] Vorbereitung & Aufstellung
-- [x] Matchday mit Wechsel-Briefing
+- [x] Matchday mit Timer & Wechsel-Briefing
 - [x] Post-Match Bericht
 - [x] Trainingshub
 
-### Phase 2 – Hinrunde
+### Phase 2 – Hinrunde (bis Winterpause)
 - [ ] Übungsdatenbank im Trainingshub
-- [ ] Taktikboard
+- [ ] Taktikhub (animiertes Taktikboard, Laufwege, SVG-Zeichenfläche)
+- [ ] Docker + PostgreSQL Migration
 
 ### Phase 3 – Rückrunde
-- [ ] Spieler-Accounts mit Rollenystem
-- [ ] LLM-basierte Spielanalyse
+- [ ] Spieler-/Trainer-Accounts mit Rollensystem
+- [ ] LLM-basierte Spielanalyse (Textzusammenfassungen aus Spieldaten)
+- [ ] MatchEvent player-Feld (Tor/Karte einem Spieler zuordnen)
 
 ### Langfristig
-- [ ] Multi-Tenant (mehrere Vereine/Teams)
-- [ ] App Store Distribution
+- [ ] Multi-Tenant-Architektur (mehrere Vereine/Teams)
+- [ ] Vereinslizenz-Modell (~125–150€/Jahr)
+- [ ] App Store Distribution via Capacitor
 
+---
+
+## Tech Stack
+
+| Bereich | Technologie |
+|---|---|
+| Backend | Python, Django, Django REST Framework |
+| Datenbank | SQLite (aktuell) → PostgreSQL (geplant) |
+| Auth | JWT via httpOnly-Cookies, Auto-Refresh bei 401 |
+| Frontend | React, Vite, JSX, CSS |
+| Export | html2canvas (Aufstellungs-PNG) |
+| Deployment | Render (aktuell), Docker geplant |
