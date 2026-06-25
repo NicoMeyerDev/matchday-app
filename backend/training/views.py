@@ -13,12 +13,15 @@ class TrainingViewSet(ModelViewSet):
         return Training.objects.filter(club__owner=self.request.user)
     
     def perform_create(self, serializer):
-        training = serializer.save()
+        club = Club.objects.filter(owner=self.request.user).first()
+        training = serializer.save(club = club)
+        
         if training.trainingsart == 'klassisch':
             TrainingsBlock.objects.create(training = training, name = 'Aktivierung/Erwärmung' , trainingstyp = 'aktivierung', reihenfolge = 1)
             TrainingsBlock.objects.create(training = training, name = 'Spielform_1', trainingstyp = 'spielform_1', reihenfolge = 2)
             TrainingsBlock.objects.create(training = training, name = 'Zwischenblock', trainingstyp = 'zwischenblock', reihenfolge = 3)
             TrainingsBlock.objects.create(training = training, name = 'SPielform_2', trainingstyp = 'spielform_2', reihenfolge = 4)
+            
 
 
 class TrainingsBlockViewSet(ModelViewSet):
