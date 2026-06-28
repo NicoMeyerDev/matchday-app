@@ -24,7 +24,7 @@ class TrainingsBlock(models.Model):
     """
     training = models.ForeignKey('Training', related_name='blocks', on_delete=models.CASCADE)
     name = models.CharField(max_length=120)
-    trainingstyp = models.CharField(max_length=20, choices=[('aktivierung', 'Aktivierung/Erwärmung'), ('spielform_1', 'Spielform_1'), ('zwischenblock', 'Zwischenblock'), ('spielform_2', 'Spielform_2')])
+    trainingstyp = models.CharField(max_length=20, blank=True, choices=[('aktivierung', 'Aktivierung/Erwärmung'), ('spielform_1', 'Spielform_1'), ('zwischenblock', 'Zwischenblock'), ('spielform_2', 'Spielform_2'), ('frei', 'Freier Block')])
     reihenfolge = models.IntegerField(default=0)
     start_time = models.TimeField(null=True, blank=True)
     end_time = models.TimeField(null=True, blank=True)

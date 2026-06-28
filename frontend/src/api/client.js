@@ -130,3 +130,7 @@ export function fetchTrainingBlocks(trainingId) {
 export function updateTrainingBlock(id, payload) {
   return request(`/training/training-blocks/${id}/`, { method: "PATCH", body: JSON.stringify(payload) });
 }
+
+export function createTrainingBlock(payload) {
+  return request("/training/training-blocks/", { method: "POST", body: JSON.stringify(payload) });
+}
