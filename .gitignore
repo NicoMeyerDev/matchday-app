@@ -16,5 +16,9 @@ __pycache__/
 db.sqlite3
 
 staticfiles/
+
 #harnesch
 claude.md
+
+
+

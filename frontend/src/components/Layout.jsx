@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const S = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500&display=swap');
@@ -23,7 +23,7 @@ const S = `
     position: fixed;
     top: 0; left: 0; bottom: 0;
     z-index: 100;
-    transition: width 0.2s ease;
+    transition: width 0.35s ease;
     overflow: hidden;
   }
 
@@ -172,13 +172,19 @@ const S = `
     margin-left: 220px;
     flex: 1;
     min-height: 100vh;
-    transition: margin-left 0.2s ease;
+    transition: margin-left 0.35s ease;
   }
   .layout-main.collapsed { margin-left: 64px; }
 `;
 
-export default function Layout({ user, onLogout, currentPage, onNavigate, children }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+export default function Layout({ user, club, onLogout, currentPage, onNavigate, children }) {
+  const [isCollapsed, setIsCollapsed] = useState(true);
+
+  useEffect(() => {
+    const expand  = setTimeout(() => setIsCollapsed(false), 120);
+    const collaps = setTimeout(() => setIsCollapsed(true),  2000);
+    return () => { clearTimeout(expand); clearTimeout(collaps); };
+  }, []);
 
   const navItems = [
     { id: "hub", icon: "🏠", label: "Dashboard" },
@@ -186,6 +192,7 @@ export default function Layout({ user, onLogout, currentPage, onNavigate, childr
     { id: "preparation", icon: "📋", label: "Vorbereitung" },
     { id: "matchday", icon: "🏟️", label: "Matchday" },
     { id: "postmatch", icon: "📊", label: "Post-Match" },
+    { id: "training", icon: "🎯", label: "Training" },
     { id: "analyse", icon: "📈", label: "Analyse", soon: true },
   ];
 
@@ -206,8 +213,7 @@ export default function Layout({ user, onLogout, currentPage, onNavigate, childr
           <div className="sidebar-club">
             <div className="club-badge">⚽</div>
             <div className="hide-on-collapse">
-              <div className="club-name">Mein Verein</div>
-              <div className="club-team">1. Herren</div>
+              <div className="club-name">{club?.name || "Mein Verein"}</div>
             </div>
           </div>
 

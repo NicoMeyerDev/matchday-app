@@ -224,7 +224,6 @@ export default function PostMatch({ matchEvents = [], initialReportId = null, on
             <div className="pm-title-label">Saison 2025/26</div>
             <div className="pm-title">Post-Match</div>
           </div>
-          {!showForm && <button className="pm-btn-new" onClick={handleNew}>+ Neuer Bericht</button>}
         </div>
 
         {error && <div className="pm-error">{error}</div>}
