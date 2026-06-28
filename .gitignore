@@ -14,7 +14,7 @@ frontend/.env
 __pycache__/
 *.pyc
 db.sqlite3
-staticfiles/
 
+staticfiles/
 #harnesch
 claude.md
