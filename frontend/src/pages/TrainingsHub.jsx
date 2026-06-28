@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchTrainings, createTraining } from "../api/client";
+import { fetchTrainings, createTraining, deleteTraining, fetchTrainingBlocks, updateTrainingBlock } from "../api/client";
 
 const COLORS = {
   bg: "#07070a",
@@ -81,6 +81,20 @@ const inputStyle = {
   colorScheme: "dark",
 };
 
+const BLOCK_LABELS = {
+  aktivierung: "Aktivierung / Erwärmung",
+  spielform_1: "Spielform 1",
+  zwischenblock: "Zwischenblock",
+  spielform_2: "Spielform 2",
+};
+
+const BLOCK_COLORS = {
+  aktivierung: COLORS.blue,
+  spielform_1: COLORS.green,
+  zwischenblock: COLORS.orange,
+  spielform_2: COLORS.green,
+};
+
 export default function TrainingsHub({ onBack }) {
   const [activeTab, setActiveTab] = useState("Übersicht");
   const [filterKat, setFilterKat] = useState("Alle");
@@ -91,15 +105,58 @@ export default function TrainingsHub({ onBack }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Detail view
+  const [selectedTraining, setSelectedTraining] = useState(null);
+  const [blocks, setBlocks] = useState([]);
+  const [blocksLoading, setBlocksLoading] = useState(false);
+  const [blockNotes, setBlockNotes] = useState({});
+
   // Form state
   const [formThema, setFormThema] = useState("");
   const [formDate, setFormDate] = useState("");
+  const [formTime, setFormTime] = useState("18:00");
   const [formSpieler, setFormSpieler] = useState("");
   const [formSieger, setFormSieger] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
   useEffect(() => { loadTrainings(); }, []);
+
+  async function openTraining(training) {
+    setSelectedTraining(training);
+    setBlocksLoading(true);
+    try {
+      const data = await fetchTrainingBlocks(training.id);
+      const sorted = [...data].sort((a, b) => a.reihenfolge - b.reihenfolge);
+      setBlocks(sorted);
+      const notes = {};
+      sorted.forEach(b => { notes[b.id] = b.notes || ""; });
+      setBlockNotes(notes);
+    } catch (e) {
+      setBlocks([]);
+    } finally {
+      setBlocksLoading(false);
+    }
+  }
+
+  async function handleDeleteTraining(id, e) {
+    e.stopPropagation();
+    if (!confirm("Training wirklich löschen?")) return;
+    try {
+      await deleteTraining(id);
+      setTrainings(prev => prev.filter(t => t.id !== id));
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function saveBlockNotes(blockId) {
+    try {
+      await updateTrainingBlock(blockId, { notes: blockNotes[blockId] });
+    } catch (e) {
+      // silently ignore — user can retry
+    }
+  }
 
   async function loadTrainings() {
     setIsLoading(true);
@@ -129,7 +186,7 @@ export default function TrainingsHub({ onBack }) {
         name: formThema.trim(),
         trainingsart: trainingsTyp === "Klassisch" ? "klassisch" : "frei",
         date: formDate,
-        time: "00:00:00",
+        time: formTime + ":00",
         notes: notesParts.join(" | "),
       });
       await loadTrainings();
@@ -137,6 +194,7 @@ export default function TrainingsHub({ onBack }) {
       setTrainingsTyp(null);
       setFormThema("");
       setFormDate("");
+      setFormTime("18:00");
       setFormSpieler("");
       setFormSieger("");
     } catch (e) {
@@ -166,6 +224,83 @@ export default function TrainingsHub({ onBack }) {
   const maxChart = Math.max(...chartValues);
 
   const filteredUebungen = filterKat === "Alle" ? mockUebungen : mockUebungen.filter(u => u.kategorie === filterKat);
+
+  // ── Detail-Ansicht ──────────────────────────────────────────────────
+  if (selectedTraining) {
+    return (
+      <div style={{ background: COLORS.bg, minHeight: "100vh", color: COLORS.text, fontFamily: "Inter, -apple-system, sans-serif", padding: 24 }}>
+        <div
+          onClick={() => setSelectedTraining(null)}
+          style={{ fontSize: 11, color: COLORS.green, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700, marginBottom: 16, cursor: "pointer" }}
+        >
+          ← Zurück zur Übersicht
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5, marginBottom: 4 }}>{selectedTraining.name}</div>
+            <div style={{ fontSize: 13, color: COLORS.textMuted }}>
+              {formatDate(selectedTraining.date)} · {selectedTraining.time?.slice(0, 5)} Uhr
+            </div>
+          </div>
+          <Badge
+            label={selectedTraining.trainingsart === "klassisch" ? "Klassisch" : "Frei"}
+            color={selectedTraining.trainingsart === "klassisch" ? COLORS.green : COLORS.orange}
+          />
+        </div>
+
+        {selectedTraining.notes && (
+          <Card style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, color: COLORS.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Notizen</div>
+            <div style={{ fontSize: 13, color: COLORS.text }}>{selectedTraining.notes}</div>
+          </Card>
+        )}
+
+        <div style={{ fontSize: 11, color: COLORS.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
+          Trainingsblöcke
+        </div>
+
+        {blocksLoading && <div style={{ color: COLORS.textMuted, fontSize: 13 }}>Lade Blöcke…</div>}
+        {!blocksLoading && blocks.length === 0 && (
+          <div style={{ color: COLORS.textMuted, fontSize: 13 }}>Keine Blöcke vorhanden.</div>
+        )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {blocks.map(block => {
+            const color = BLOCK_COLORS[block.trainingstyp] || COLORS.green;
+            return (
+              <Card key={block.id} style={{ padding: "16px 18px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                  <div style={{ width: 3, height: 32, background: color, borderRadius: 4, flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>{block.name}</div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>
+                      {BLOCK_LABELS[block.trainingstyp] || block.trainingstyp}
+                      {block.start_time && block.end_time && ` · ${block.start_time.slice(0, 5)} – ${block.end_time.slice(0, 5)}`}
+                    </div>
+                  </div>
+                </div>
+                <textarea
+                  rows={2}
+                  placeholder="Notizen zu diesem Block…"
+                  value={blockNotes[block.id] ?? ""}
+                  onChange={e => setBlockNotes(prev => ({ ...prev, [block.id]: e.target.value }))}
+                  onBlur={() => saveBlockNotes(block.id)}
+                  style={{
+                    ...inputStyle,
+                    resize: "vertical",
+                    fontSize: 13,
+                    lineHeight: 1.5,
+                  }}
+                />
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  // ────────────────────────────────────────────────────────────────────
 
   return (
     <div style={{ background: COLORS.bg, minHeight: "100vh", color: COLORS.text, fontFamily: "Inter, -apple-system, sans-serif" }}>
@@ -282,16 +417,29 @@ export default function TrainingsHub({ onBack }) {
 
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {sortedTrainings.slice(0, 8).map(t => (
-                  <Card key={t.id} onClick={() => {}} style={{ padding: "14px 16px" }}>
+                  <Card key={t.id} onClick={() => openTraining(t)} style={{ padding: "14px 16px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                      <div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 3 }}>{t.name}</div>
-                        <div style={{ fontSize: 12, color: COLORS.textMuted }}>{formatDate(t.date)}</div>
+                        <div style={{ fontSize: 12, color: COLORS.textMuted }}>
+                          {formatDate(t.date)}{t.time ? ` · ${t.time.slice(0, 5)} Uhr` : ""}
+                        </div>
                       </div>
-                      <Badge
-                        label={t.trainingsart === "klassisch" ? "Klassisch" : "Frei"}
-                        color={t.trainingsart === "klassisch" ? COLORS.green : COLORS.orange}
-                      />
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                        <Badge
+                          label={t.trainingsart === "klassisch" ? "Klassisch" : "Frei"}
+                          color={t.trainingsart === "klassisch" ? COLORS.green : COLORS.orange}
+                        />
+                        <button
+                          onClick={e => handleDeleteTraining(t.id, e)}
+                          style={{
+                            background: "none", border: "none", cursor: "pointer",
+                            color: COLORS.textMuted, fontSize: 16, lineHeight: 1, padding: "2px 4px",
+                            borderRadius: 4,
+                          }}
+                          title="Training löschen"
+                        >✕</button>
+                      </div>
                     </div>
                     {t.notes && t.notes.includes("Sieger:") && (
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
@@ -375,14 +523,25 @@ export default function TrainingsHub({ onBack }) {
                         onChange={e => setFormThema(e.target.value)}
                       />
                     </div>
-                    <div>
-                      <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Datum</div>
-                      <input
-                        type="date"
-                        style={inputStyle}
-                        value={formDate}
-                        onChange={e => setFormDate(e.target.value)}
-                      />
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Datum</div>
+                        <input
+                          type="date"
+                          style={inputStyle}
+                          value={formDate}
+                          onChange={e => setFormDate(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Uhrzeit</div>
+                        <input
+                          type="time"
+                          style={inputStyle}
+                          value={formTime}
+                          onChange={e => setFormTime(e.target.value)}
+                        />
+                      </div>
                     </div>
                   </div>
                 </Card>

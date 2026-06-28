@@ -114,3 +114,19 @@ export function fetchTrainings() { return request("/training/trainings/"); }
 export function createTraining(payload) {
   return request("/training/trainings/", { method: "POST", body: JSON.stringify(payload) });
 }
+
+export function updateTraining(id, payload) {
+  return request(`/training/trainings/${id}/`, { method: "PATCH", body: JSON.stringify(payload) });
+}
+
+export function deleteTraining(id) {
+  return request(`/training/trainings/${id}/`, { method: "DELETE" });
+}
+
+export function fetchTrainingBlocks(trainingId) {
+  return request(`/training/training-blocks/?training=${trainingId}`);
+}
+
+export function updateTrainingBlock(id, payload) {
+  return request(`/training/training-blocks/${id}/`, { method: "PATCH", body: JSON.stringify(payload) });
+}
