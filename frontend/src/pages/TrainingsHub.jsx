@@ -1,5 +1,10 @@
+// Trainingshub: Kalender, Übungsdatenbank und Trainingsplanung
 import { useState, useEffect } from "react";
-import { fetchTrainings, createTraining, updateTraining, deleteTraining, fetchTrainingBlocks, updateTrainingBlock, createTrainingBlock } from "../api/client";
+import {
+  fetchTrainings, createTraining, updateTraining, deleteTraining,
+  fetchTrainingBlocks, updateTrainingBlock, createTrainingBlock,
+  fetchUebungen, createUebung, updateUebung, deleteUebung, fetchCategories,
+} from "../api/client";
 
 const COLORS = {
   bg: "#07070a",
@@ -18,42 +23,34 @@ const COLORS = {
   textDim: "#374151",
 };
 
-const mockUebungen = [
-  { id: 1, name: "Passstafette 4v2", beschreibung: "Ballbesitz im Quadrat, 2 Verfolger", kategorie: "Passspiel", spieler: "4v2", schwerpunkt: "Technik", dauer: "15 min" },
-  { id: 2, name: "Abschluss nach Kombination", beschreibung: "Flügelspiel mit Abschluss über Mitte", kategorie: "Abschluss", spieler: "Gruppe", schwerpunkt: "Technik", dauer: "20 min" },
-  { id: 3, name: "Pressing 6v6", beschreibung: "Kompaktes Mittelfeldpressing mit Auslöser", kategorie: "Pressing", spieler: "6v6", schwerpunkt: "Taktik", dauer: "25 min" },
-  { id: 4, name: "1v1 Defensiv", beschreibung: "Stellung halten, Gegner lenken", kategorie: "Zweikampf", spieler: "1v1", schwerpunkt: "Defensiv", dauer: "10 min" },
-  { id: 5, name: "Rondo 5v2", beschreibung: "Kurze Pässe unter Druck", kategorie: "Passspiel", spieler: "5v2", schwerpunkt: "Technik", dauer: "12 min" },
-  { id: 6, name: "Torabschluss nach Dribbling", beschreibung: "Gegenspieler umspielen, Abschluss", kategorie: "Abschluss", spieler: "Einzeln", schwerpunkt: "Technik", dauer: "15 min" },
-  { id: 7, name: "Laufen & Dehnen", beschreibung: "Aufwärmprogramm mit dynamischem Dehnen", kategorie: "Aufwärmen", spieler: "Alle", schwerpunkt: "Koordination", dauer: "10 min" },
-  { id: 8, name: "Koordinationsleiter", beschreibung: "Schnelligkeit und Koordination", kategorie: "Aufwärmen", spieler: "Alle", schwerpunkt: "Koordination", dauer: "8 min" },
-  { id: 9, name: "Ballgewöhnung", beschreibung: "Freie Ballarbeit zur Einstimmung", kategorie: "Aufwärmen", spieler: "Alle", schwerpunkt: "Technik", dauer: "10 min" },
-];
-
-const KATEGORIEN = ["Alle", "Aufwärmen", "Passspiel", "Abschluss", "Pressing", "Zweikampf"];
 const BLOCK_TYPES = ["aktivierung", "spielform_1", "zwischenblock", "spielform_2"];
 const BLOCK_LABELS = { aktivierung: "Aktivierung / Erwärmung", spielform_1: "Spielform 1", zwischenblock: "Zwischenblock", spielform_2: "Spielform 2" };
+
+// Filtert Übungen pro Blocktyp nach der Kategorie "Aufwärmen"
 const BLOCK_EXERCISE_FILTER = {
-  aktivierung: u => u.kategorie === "Aufwärmen",
-  spielform_1: u => u.kategorie !== "Aufwärmen",
-  zwischenblock: u => u.kategorie !== "Aufwärmen",
-  spielform_2: u => u.kategorie !== "Aufwärmen",
+  aktivierung: u => u.categories?.some(c => c.name === "Aufwärmen"),
+  spielform_1: u => !u.categories?.some(c => c.name === "Aufwärmen"),
+  zwischenblock: u => !u.categories?.some(c => c.name === "Aufwärmen"),
+  spielform_2: u => !u.categories?.some(c => c.name === "Aufwärmen"),
 };
+
 const WEEKDAY_LABELS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 const MONTH_NAMES = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
 const CARD_OPACITIES = [1, 1, 0.5, 0.25];
 
-function parseBlockNotes(raw) {
+// Liest Übungs-IDs und Freitext aus den Block-Notizen
+function parseBlockNotes(raw, uebungen) {
   if (!raw) return { exercises: [], text: "" };
   const nl = raw.indexOf("\n");
   const firstLine = nl === -1 ? raw : raw.slice(0, nl);
   if (firstLine.startsWith("__ex__:")) {
     const ids = firstLine.slice(7).split(",").map(Number).filter(Boolean);
-    return { exercises: mockUebungen.filter(u => ids.includes(u.id)), text: nl === -1 ? "" : raw.slice(nl + 1) };
+    return { exercises: uebungen.filter(u => ids.includes(u.id)), text: nl === -1 ? "" : raw.slice(nl + 1) };
   }
   return { exercises: [], text: raw };
 }
 
+// Serialisiert Übungs-IDs und Freitext in das Block-Notizen-Format
 function buildBlockNotes(exercises, text) {
   if (exercises.length === 0) return text;
   return `__ex__:${exercises.map(e => e.id).join(",")}\n${text}`;
@@ -102,10 +99,13 @@ function Card({ children, style = {}, onClick }) {
 
 const inputStyle = { width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 14px", color: COLORS.text, fontSize: 14, boxSizing: "border-box", colorScheme: "dark" };
 
-function ExercisePicker({ selected, onToggle, onClose, filter = () => true }) {
+// Übungsauswahl für Trainingsblöcke
+function ExercisePicker({ uebungen, selected, onToggle, onClose, filter = () => true }) {
   const [search, setSearch] = useState("");
-  const filtered = mockUebungen.filter(filter).filter(u =>
-    !search || u.name.toLowerCase().includes(search.toLowerCase()) || u.kategorie.toLowerCase().includes(search.toLowerCase())
+  const filtered = uebungen.filter(filter).filter(u =>
+    !search ||
+    u.name.toLowerCase().includes(search.toLowerCase()) ||
+    u.categories?.some(c => c.name.toLowerCase().includes(search.toLowerCase()))
   );
   return (
     <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.borderLight}`, borderRadius: 10, overflow: "hidden" }}>
@@ -117,6 +117,7 @@ function ExercisePicker({ selected, onToggle, onClose, filter = () => true }) {
         {filtered.length === 0 && <div style={{ padding: "12px 16px", fontSize: 13, color: COLORS.textMuted }}>Keine Übungen gefunden.</div>}
         {filtered.map(u => {
           const already = selected.some(x => x.id === u.id);
+          const katLabel = u.categories?.[0]?.name ?? "Übung";
           return (
             <div key={u.id} onClick={() => onToggle(u)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", cursor: "pointer", borderBottom: `1px solid ${COLORS.border}`, background: already ? COLORS.greenDim : "transparent" }}
               onMouseEnter={e => { if (!already) e.currentTarget.style.background = COLORS.surfaceHover; }}
@@ -124,7 +125,7 @@ function ExercisePicker({ selected, onToggle, onClose, filter = () => true }) {
             >
               <div>
                 <div style={{ fontSize: 13, fontWeight: already ? 600 : 400, color: already ? COLORS.green : COLORS.text }}>{u.name}</div>
-                <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>{u.kategorie} · {u.dauer}</div>
+                <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>{katLabel} · {u.duration} min</div>
               </div>
               {already && <span style={{ fontSize: 14, color: COLORS.green }}>✓</span>}
             </div>
@@ -182,6 +183,229 @@ const DB_TILE = (onClick) => (
   </div>
 );
 
+// Kategoriespezifische Feldskizze als SVG-Illustration
+function UebungIllustration({ categoryName }) {
+  const s = { width: "100%", height: 80, display: "block" };
+  const F = "#0c180c", L = "#1a3a1a";
+
+  switch (categoryName) {
+    case "Passspiel":
+      return (
+        <svg viewBox="0 0 300 80" style={s}><rect width="300" height="80" fill={F}/>
+          <circle cx="150" cy="40" r="27" fill="none" stroke={L} strokeWidth="0.8" strokeDasharray="3,2"/>
+          <line x1="177" y1="40" x2="136" y2="64" stroke="#22c55e" strokeWidth="0.8" strokeDasharray="4,2"/>
+          <line x1="136" y1="64" x2="123" y2="40" stroke="#22c55e" strokeWidth="0.8" strokeDasharray="4,2"/>
+          <line x1="164" y1="16" x2="177" y2="40" stroke="#22c55e" strokeWidth="0.8" strokeDasharray="4,2"/>
+          <circle cx="177" cy="40" r="5" fill="#22c55e"/>
+          <circle cx="164" cy="64" r="5" fill="#22c55e"/>
+          <circle cx="136" cy="64" r="5" fill="#22c55e"/>
+          <circle cx="123" cy="40" r="5" fill="#22c55e"/>
+          <circle cx="136" cy="16" r="5" fill="#22c55e"/>
+          <circle cx="164" cy="16" r="5" fill="#22c55e"/>
+          <circle cx="143" cy="37" r="5" fill="#e05555"/>
+          <circle cx="157" cy="43" r="5" fill="#e05555"/>
+          <circle cx="150" cy="40" r="2.5" fill="#ddd"/>
+        </svg>
+      );
+    case "Pressing":
+      return (
+        <svg viewBox="0 0 300 80" style={s}><rect width="300" height="80" fill={F}/>
+          <rect x="15" y="8" width="270" height="64" fill="none" stroke={L} strokeWidth="1"/>
+          <line x1="15" y1="40" x2="285" y2="40" stroke={L} strokeWidth="0.5" strokeDasharray="4,2"/>
+          {[50,90,130,170,210,250].map((x,i) => <circle key={i} cx={x} cy="22" r="5" fill="#e05555"/>)}
+          {[50,90,130,170,210,250].map((x,i) => <circle key={i} cx={x} cy="56" r="5" fill="#22c55e"/>)}
+          {[90,150,210].map((x,i) => <line key={i} x1={x} y1="50" x2={x} y2="30" stroke="#22c55e" strokeWidth="0.8" strokeDasharray="3,2"/>)}
+        </svg>
+      );
+    case "Abschluss":
+      return (
+        <svg viewBox="0 0 300 80" style={s}><rect width="300" height="80" fill={F}/>
+          <line x1="262" y1="20" x2="285" y2="20" stroke={L} strokeWidth="1.5"/>
+          <line x1="262" y1="60" x2="285" y2="60" stroke={L} strokeWidth="1.5"/>
+          <line x1="285" y1="20" x2="285" y2="60" stroke={L} strokeWidth="1.5"/>
+          <circle cx="80" cy="40" r="6" fill="#22c55e"/>
+          <circle cx="140" cy="20" r="5" fill="#22c55e"/>
+          <line x1="140" y1="25" x2="90" y2="37" stroke="#22c55e" strokeWidth="0.8" strokeDasharray="4,2"/>
+          <line x1="86" y1="40" x2="262" y2="38" stroke="#22c55e" strokeWidth="0.8" strokeDasharray="5,2"/>
+          <circle cx="160" cy="40" r="3" fill="#ddd"/>
+          <circle cx="200" cy="44" r="5" fill="#e05555"/>
+        </svg>
+      );
+    case "Zweikampf":
+      return (
+        <svg viewBox="0 0 300 80" style={s}><rect width="300" height="80" fill={F}/>
+          <circle cx="105" cy="40" r="7" fill="#22c55e"/>
+          <circle cx="195" cy="40" r="7" fill="#e05555"/>
+          <circle cx="150" cy="40" r="4" fill="#ddd"/>
+          <polygon points="65,50 69,60 61,60" fill="#f59e0b"/>
+          <polygon points="235,50 239,60 231,60" fill="#f59e0b"/>
+          <line x1="112" y1="40" x2="146" y2="40" stroke="#22c55e" strokeWidth="0.8" strokeDasharray="4,2"/>
+          <line x1="154" y1="40" x2="188" y2="40" stroke="#e05555" strokeWidth="0.8" strokeDasharray="4,2"/>
+        </svg>
+      );
+    case "Aufwärmen":
+      return (
+        <svg viewBox="0 0 300 80" style={s}><rect width="300" height="80" fill={F}/>
+          <polygon points="50,53 54,63 46,63" fill="#f59e0b"/>
+          <polygon points="100,23 104,33 96,33" fill="#f59e0b"/>
+          <polygon points="150,53 154,63 146,63" fill="#f59e0b"/>
+          <polygon points="200,23 204,33 196,33" fill="#f59e0b"/>
+          <polygon points="250,53 254,63 246,63" fill="#f59e0b"/>
+          <path d="M30,58 Q75,18 100,28 Q125,38 150,58 Q175,18 200,28 Q225,38 270,58" fill="none" stroke="#22c55e" strokeWidth="1" strokeDasharray="5,2"/>
+          <circle cx="30" cy="55" r="5" fill="#22c55e"/>
+        </svg>
+      );
+    case "Taktik":
+      return (
+        <svg viewBox="0 0 300 80" style={s}><rect width="300" height="80" fill={F}/>
+          <rect x="15" y="8" width="270" height="64" fill="none" stroke={L} strokeWidth="1"/>
+          <line x1="150" y1="8" x2="150" y2="72" stroke={L} strokeWidth="0.5" strokeDasharray="3,2"/>
+          <circle cx="30" cy="40" r="5" fill="#22c55e"/>
+          {[20,33,47,60].map((y,i) => <circle key={i} cx="75" cy={y} r="4" fill="#22c55e"/>)}
+          {[25,40,55].map((y,i) => <circle key={i} cx="140" cy={y} r="4" fill="#22c55e"/>)}
+          {[20,40,60].map((y,i) => <circle key={i} cx="210" cy={y} r="4" fill="#22c55e"/>)}
+          {[25,40,55].map((y,i) => <circle key={i} cx="245" cy={y} r="4" fill="#e05555"/>)}
+          <line x1="140" y1="40" x2="208" y2="40" stroke="#22c55e" strokeWidth="0.8" strokeDasharray="4,2"/>
+        </svg>
+      );
+    case "Technik":
+      return (
+        <svg viewBox="0 0 300 80" style={s}><rect width="300" height="80" fill={F}/>
+          <polygon points="80,23 84,33 76,33" fill="#f59e0b"/>
+          <polygon points="120,53 124,63 116,63" fill="#f59e0b"/>
+          <polygon points="160,23 164,33 156,33" fill="#f59e0b"/>
+          <polygon points="200,53 204,63 196,63" fill="#f59e0b"/>
+          <polygon points="240,23 244,33 236,33" fill="#f59e0b"/>
+          <path d="M50,40 Q80,18 120,58 Q160,18 200,58 Q240,18 270,40" fill="none" stroke="#22c55e" strokeWidth="1" strokeDasharray="5,2"/>
+          <circle cx="50" cy="40" r="6" fill="#22c55e"/>
+          <circle cx="63" cy="40" r="2.5" fill="#ddd"/>
+        </svg>
+      );
+    case "Standardsituation":
+      return (
+        <svg viewBox="0 0 300 80" style={s}><rect width="300" height="80" fill={F}/>
+          <line x1="262" y1="20" x2="285" y2="20" stroke={L} strokeWidth="1.5"/>
+          <line x1="262" y1="60" x2="285" y2="60" stroke={L} strokeWidth="1.5"/>
+          <line x1="285" y1="20" x2="285" y2="60" stroke={L} strokeWidth="1.5"/>
+          <circle cx="185" cy="27" r="5" fill="#e05555"/>
+          <circle cx="185" cy="40" r="5" fill="#e05555"/>
+          <circle cx="185" cy="53" r="5" fill="#e05555"/>
+          <circle cx="175" cy="33" r="5" fill="#e05555"/>
+          <circle cx="175" cy="47" r="5" fill="#e05555"/>
+          <circle cx="80" cy="55" r="6" fill="#22c55e"/>
+          <circle cx="110" cy="50" r="3.5" fill="#ddd"/>
+          <path d="M110,50 Q148,14 185,18 Q220,24 262,38" fill="none" stroke="#22c55e" strokeWidth="0.8" strokeDasharray="5,2"/>
+          <circle cx="230" cy="26" r="5" fill="#22c55e"/>
+          <circle cx="230" cy="52" r="5" fill="#22c55e"/>
+        </svg>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 300 80" style={s}><rect width="300" height="80" fill={F}/>
+          <rect x="15" y="8" width="270" height="64" fill="none" stroke={L} strokeWidth="1"/>
+          <line x1="150" y1="8" x2="150" y2="72" stroke={L} strokeWidth="1"/>
+          <circle cx="150" cy="40" r="18" fill="none" stroke={L} strokeWidth="1"/>
+          <circle cx="150" cy="40" r="1.5" fill={L}/>
+        </svg>
+      );
+  }
+}
+
+// Modal zum Anlegen und Bearbeiten einer Übung
+function UebungModal({ categories, onSave, onClose, onDelete = null, initialData = null }) {
+  const [name, setName] = useState(initialData?.name ?? "");
+  const [description, setDescription] = useState(initialData?.description ?? "");
+  const [duration, setDuration] = useState(initialData?.duration ? String(initialData.duration) : "");
+  const [playerCount, setPlayerCount] = useState(initialData?.player_count ?? "");
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState(
+    initialData?.categories?.map(c => c.id) ?? []
+  );
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit() {
+    if (!name.trim()) { setError("Bitte einen Namen angeben."); return; }
+    const dur = Number(duration);
+    if (!duration || isNaN(dur) || dur <= 0) { setError("Bitte eine gültige Dauer angeben."); return; }
+    setIsSaving(true);
+    setError("");
+    try {
+      await onSave({
+        name: name.trim(),
+        description: description.trim(),
+        duration: dur,
+        player_count: playerCount.trim(),
+        category_ids: selectedCategoryIds,
+      });
+    } catch (e) {
+      setError(e.message);
+      setIsSaving(false);
+    }
+  }
+
+  function toggleCategory(id) {
+    setSelectedCategoryIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }
+
+  const isEdit = !!initialData;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200 }}>
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderLight}`, borderRadius: 16, padding: 26, width: "100%", maxWidth: 480, boxSizing: "border-box", margin: "0 16px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div style={{ fontSize: 17, fontWeight: 800 }}>{isEdit ? "Übung bearbeiten" : "Übung anlegen"}</div>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 20, lineHeight: 1 }}>✕</button>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Name *</div>
+            <input autoFocus style={inputStyle} placeholder="z.B. Passstafette 4v2" value={name} onChange={e => setName(e.target.value)} />
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Beschreibung</div>
+            <textarea style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }} rows={3} placeholder="Ablauf der Übung beschreiben…" value={description} onChange={e => setDescription(e.target.value)} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Dauer (Minuten) *</div>
+              <input style={inputStyle} type="number" min="1" placeholder="z.B. 15" value={duration} onChange={e => setDuration(e.target.value)} />
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Format / Spieler</div>
+              <input style={inputStyle} placeholder="z.B. 4v2" value={playerCount} onChange={e => setPlayerCount(e.target.value)} />
+            </div>
+          </div>
+          {categories.length > 0 && (
+            <div>
+              <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 8 }}>Kategorien</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {categories.map(c => {
+                  const sel = selectedCategoryIds.includes(c.id);
+                  return (
+                    <button key={c.id} onClick={() => toggleCategory(c.id)} style={{ background: sel ? COLORS.green : COLORS.bg, border: `1px solid ${sel ? COLORS.green : COLORS.borderLight}`, borderRadius: 20, padding: "6px 14px", color: sel ? "#fff" : COLORS.textMuted, cursor: "pointer", fontSize: 12, fontWeight: sel ? 600 : 400, transition: "background 0.1s, border-color 0.1s" }}>
+                      {c.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+        {error && <div style={{ background: COLORS.red + "22", border: `1px solid ${COLORS.red}44`, borderRadius: 8, padding: "10px 14px", marginTop: 14, color: COLORS.red, fontSize: 13 }}>{error}</div>}
+        <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+          <button onClick={onClose} style={{ flex: 1, background: "none", color: COLORS.textMuted, border: `1px solid ${COLORS.borderLight}`, borderRadius: 10, padding: 13, fontSize: 14, cursor: "pointer" }}>Abbrechen</button>
+          {isEdit && onDelete && (
+            <button onClick={onDelete} style={{ flex: 1, background: COLORS.red + "22", color: COLORS.red, border: `1px solid ${COLORS.red}44`, borderRadius: 10, padding: 13, fontSize: 14, cursor: "pointer" }}>Löschen</button>
+          )}
+          <button onClick={handleSubmit} disabled={isSaving} style={{ flex: 2, background: isSaving ? COLORS.textDim : COLORS.green, color: "#fff", border: "none", borderRadius: 10, padding: 13, fontSize: 14, fontWeight: 700, cursor: isSaving ? "not-allowed" : "pointer" }}>
+            {isSaving ? "Wird gespeichert…" : "Speichern"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TrainingsHub({ onBack }) {
   const todayDate = new Date();
   const todayStr = toISODate(todayDate);
@@ -191,10 +415,17 @@ export default function TrainingsHub({ onBack }) {
   const [filterKat, setFilterKat] = useState("Alle");
   const [trainingsTyp, setTrainingsTyp] = useState(null);
 
-  // API
+  // API — Trainings
   const [trainings, setTrainings] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // API — Übungen & Kategorien
+  const [uebungen, setUebungen] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [showUebungModal, setShowUebungModal] = useState(false);
+  const [editingUebung, setEditingUebung] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Detail view
   const [selectedTraining, setSelectedTraining] = useState(null);
@@ -216,7 +447,7 @@ export default function TrainingsHub({ onBack }) {
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
-  useEffect(() => { loadTrainings(); }, []);
+  useEffect(() => { loadTrainings(); loadUebungenAndCategories(); }, []);
 
   async function loadTrainings() {
     setIsLoading(true);
@@ -224,6 +455,36 @@ export default function TrainingsHub({ onBack }) {
     try { setTrainings(await fetchTrainings()); }
     catch (e) { setError(e.message); }
     finally { setIsLoading(false); }
+  }
+
+  async function loadUebungenAndCategories() {
+    try {
+      const [ue, cats] = await Promise.all([fetchUebungen(), fetchCategories()]);
+      setUebungen(ue);
+      setCategories(cats);
+    } catch {}
+  }
+
+  async function handleSaveUebung(payload, id) {
+    if (id) {
+      await updateUebung(id, payload);
+    } else {
+      await createUebung(payload);
+    }
+    const ue = await fetchUebungen();
+    setUebungen(ue);
+    setEditingUebung(null);
+    setShowUebungModal(false);
+  }
+
+  async function handleDeleteUebung(id) {
+    if (!confirm("Übung wirklich löschen?")) return;
+    try {
+      await deleteUebung(id);
+      const ue = await fetchUebungen();
+      setUebungen(ue);
+      setEditingUebung(null);
+    } catch (e) { setError(e.message); }
   }
 
   async function handleSubmit() {
@@ -257,8 +518,9 @@ export default function TrainingsHub({ onBack }) {
       const sorted = [...(await fetchTrainingBlocks(training.id))].sort((a, b) => a.reihenfolge - b.reihenfolge);
       setBlocks(sorted);
       const nm = {}, em = {};
-      sorted.forEach(b => { const p = parseBlockNotes(b.notes); nm[b.id] = p.text; em[b.id] = p.exercises; });
+      sorted.forEach(b => { const p = parseBlockNotes(b.notes, uebungen); nm[b.id] = p.text; em[b.id] = p.exercises; });
       setBlockNotes(nm); setBlockExercises(em);
+      setCollapsedBlocks(new Set(sorted.map(b => b.id)));
     } catch { setBlocks([]); }
     finally { setBlocksLoading(false); }
   }
@@ -338,7 +600,7 @@ export default function TrainingsHub({ onBack }) {
                       <div>
                         <div style={{ fontSize: 11, color: COLORS.textMuted, fontWeight: 600, marginBottom: 8 }}>Übungen</div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                          {exs.map(u => <div key={u.id} style={{ background: COLORS.bg, border: `1px solid ${COLORS.borderLight}`, borderRadius: 20, padding: "4px 12px", fontSize: 12, color: COLORS.text, display: "flex", alignItems: "center", gap: 6 }}><span>{u.name}</span><span style={{ color: COLORS.textMuted, fontSize: 10 }}>{u.dauer}</span></div>)}
+                          {exs.map(u => <div key={u.id} style={{ background: COLORS.bg, border: `1px solid ${COLORS.borderLight}`, borderRadius: 20, padding: "4px 12px", fontSize: 12, color: COLORS.text, display: "flex", alignItems: "center", gap: 6 }}><span>{u.name}</span><span style={{ color: COLORS.textMuted, fontSize: 10 }}>{u.duration} min</span></div>)}
                         </div>
                       </div>
                     ) : <div style={{ fontSize: 12, color: COLORS.textDim, fontStyle: "italic" }}>Keine Übungen geplant</div>}
@@ -402,10 +664,10 @@ export default function TrainingsHub({ onBack }) {
                           </div>
                           {selected.length > 0 && (
                             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: pickerOpen ? 8 : 0 }}>
-                              {selected.map(u => <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 6, background: COLORS.bg, border: `1px solid ${COLORS.borderLight}`, borderRadius: 20, padding: "4px 10px 4px 12px", fontSize: 12, color: COLORS.text }}><span>{u.name}</span><span style={{ color: COLORS.textMuted, fontSize: 10 }}>{u.dauer}</span><button onClick={() => toggleFormExercise(typ, u)} style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, fontSize: 13, lineHeight: 1, padding: "0 0 0 2px" }}>✕</button></div>)}
+                              {selected.map(u => <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 6, background: COLORS.bg, border: `1px solid ${COLORS.borderLight}`, borderRadius: 20, padding: "4px 10px 4px 12px", fontSize: 12, color: COLORS.text }}><span>{u.name}</span><span style={{ color: COLORS.textMuted, fontSize: 10 }}>{u.duration} min</span><button onClick={() => toggleFormExercise(typ, u)} style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, fontSize: 13, lineHeight: 1, padding: "0 0 0 2px" }}>✕</button></div>)}
                             </div>
                           )}
-                          {pickerOpen && <ExercisePicker selected={selected} filter={BLOCK_EXERCISE_FILTER[typ] || (() => true)} onToggle={u => toggleFormExercise(typ, u)} onClose={() => setFormPickerOpen(null)} />}
+                          {pickerOpen && <ExercisePicker uebungen={uebungen} selected={selected} filter={BLOCK_EXERCISE_FILTER[typ] || (() => true)} onToggle={u => toggleFormExercise(typ, u)} onClose={() => setFormPickerOpen(null)} />}
                           {idx < BLOCK_TYPES.length - 1 && <div style={{ borderBottom: `1px solid ${COLORS.border}`, marginTop: 14 }} />}
                         </div>
                       );
@@ -421,8 +683,8 @@ export default function TrainingsHub({ onBack }) {
                     <button onClick={() => setFormPickerOpen(formPickerOpen === "frei" ? null : "frei")} style={{ background: "none", border: `1px solid ${COLORS.borderLight}`, borderRadius: 6, padding: "4px 10px", color: COLORS.textMuted, fontSize: 12, cursor: "pointer" }}>+ Übung</button>
                   </div>
                   {formFreeExercises.length === 0 && formPickerOpen !== "frei" && <div style={{ fontSize: 13, color: COLORS.textDim, fontStyle: "italic" }}>Noch keine Übungen gewählt.</div>}
-                  {formFreeExercises.length > 0 && <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: formPickerOpen === "frei" ? 10 : 0 }}>{formFreeExercises.map(u => <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 6, background: COLORS.bg, border: `1px solid ${COLORS.borderLight}`, borderRadius: 20, padding: "4px 10px 4px 12px", fontSize: 12, color: COLORS.text }}><span>{u.name}</span><span style={{ color: COLORS.textMuted, fontSize: 10 }}>{u.dauer}</span><button onClick={() => setFormFreeExercises(prev => prev.filter(x => x.id !== u.id))} style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, fontSize: 13, lineHeight: 1, padding: "0 0 0 2px" }}>✕</button></div>)}</div>}
-                  {formPickerOpen === "frei" && <ExercisePicker selected={formFreeExercises} filter={() => true} onToggle={u => setFormFreeExercises(prev => prev.some(x => x.id === u.id) ? prev.filter(x => x.id !== u.id) : [...prev, u])} onClose={() => setFormPickerOpen(null)} />}
+                  {formFreeExercises.length > 0 && <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: formPickerOpen === "frei" ? 10 : 0 }}>{formFreeExercises.map(u => <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 6, background: COLORS.bg, border: `1px solid ${COLORS.borderLight}`, borderRadius: 20, padding: "4px 10px 4px 12px", fontSize: 12, color: COLORS.text }}><span>{u.name}</span><span style={{ color: COLORS.textMuted, fontSize: 10 }}>{u.duration} min</span><button onClick={() => setFormFreeExercises(prev => prev.filter(x => x.id !== u.id))} style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, fontSize: 13, lineHeight: 1, padding: "0 0 0 2px" }}>✕</button></div>)}</div>}
+                  {formPickerOpen === "frei" && <ExercisePicker uebungen={uebungen} selected={formFreeExercises} filter={() => true} onToggle={u => setFormFreeExercises(prev => prev.some(x => x.id === u.id) ? prev.filter(x => x.id !== u.id) : [...prev, u])} onClose={() => setFormPickerOpen(null)} />}
                 </Card>
               )}
 
@@ -439,33 +701,97 @@ export default function TrainingsHub({ onBack }) {
 
   // ── Übungsdatenbank ────────────────────────────────────────────────
   if (view === "exercises") {
-    const filteredUebungen = filterKat === "Alle" ? mockUebungen : mockUebungen.filter(u => u.kategorie === filterKat);
+    const kategorienList = ["Alle", ...categories.map(c => c.name)];
+    const filteredUebungen = uebungen.filter(u => {
+      const matchesKat = filterKat === "Alle" || u.categories?.some(c => c.name === filterKat);
+      const matchesSearch = !searchQuery ||
+        u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesKat && matchesSearch;
+    });
+
     return (
       <div style={{ background: COLORS.bg, minHeight: "100vh", color: COLORS.text, fontFamily: "Inter, -apple-system, sans-serif", padding: 24 }}>
-        <div onClick={() => setView("dashboard")} style={{ fontSize: 11, color: COLORS.green, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700, marginBottom: 20, cursor: "pointer" }}>← Zurück</div>
-        <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 20 }}>Übungsdatenbank</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-          <input style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "8px 14px", color: COLORS.text, fontSize: 13, width: 220 }} placeholder="🔍  Übung suchen..." />
+        <div onClick={() => { setView("dashboard"); setSearchQuery(""); setFilterKat("Alle"); }} style={{ fontSize: 11, color: COLORS.green, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700, marginBottom: 20, cursor: "pointer" }}>← Zurück</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div style={{ fontSize: 20, fontWeight: 800 }}>Übungsdatenbank</div>
+          <span style={{ fontSize: 12, color: COLORS.textMuted }}>{uebungen.length} Übung{uebungen.length !== 1 ? "en" : ""}</span>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+          <input
+            style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "8px 14px", color: COLORS.text, fontSize: 13, width: 220 }}
+            placeholder="🔍  Übung suchen…"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {KATEGORIEN.map(k => <button key={k} onClick={() => setFilterKat(k)} style={{ background: filterKat === k ? COLORS.green : COLORS.surface, border: `1px solid ${filterKat === k ? COLORS.green : COLORS.border}`, borderRadius: 20, padding: "7px 14px", color: filterKat === k ? "#fff" : COLORS.textMuted, cursor: "pointer", fontSize: 12, fontWeight: filterKat === k ? 600 : 400 }}>{k}</button>)}
+            {kategorienList.map(k => (
+              <button key={k} onClick={() => setFilterKat(k)} style={{ background: filterKat === k ? COLORS.green : COLORS.surface, border: `1px solid ${filterKat === k ? COLORS.green : COLORS.border}`, borderRadius: 20, padding: "7px 14px", color: filterKat === k ? "#fff" : COLORS.textMuted, cursor: "pointer", fontSize: 12, fontWeight: filterKat === k ? 600 : 400 }}>
+                {k}
+              </button>
+            ))}
           </div>
         </div>
+
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
           {filteredUebungen.map(u => (
-            <Card key={u.id} onClick={() => {}} style={{ padding: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}><div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.3, flex: 1, marginRight: 8 }}>{u.name}</div><Badge label={u.spieler} /></div>
-              <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12, lineHeight: 1.5 }}>{u.beschreibung}</div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ display: "flex", gap: 6 }}><Badge label={u.kategorie} color={COLORS.blue} /><Badge label={u.schwerpunkt} color={COLORS.orange} /></div>
-                <span style={{ fontSize: 11, color: COLORS.textMuted }}>⏱ {u.dauer}</span>
+            <div
+              key={u.id}
+              onClick={() => setEditingUebung(u)}
+              style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, cursor: "pointer", transition: "border-color 0.15s", display: "flex", flexDirection: "column", overflow: "hidden" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "#22c55e44"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; }}
+            >
+              <UebungIllustration categoryName={u.categories?.[0]?.name} />
+              <div style={{ padding: "10px 14px 14px", display: "flex", flexDirection: "column", flex: 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.3, flex: 1, marginRight: 8 }}>{u.name}</div>
+                  {u.player_count && <Badge label={u.player_count} />}
+                </div>
+                {u.description && (
+                  <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 8, lineHeight: 1.5, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                    {u.description}
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: 8 }}>
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                    {u.categories?.map(c => <Badge key={c.id} label={c.name} color={COLORS.blue} />)}
+                  </div>
+                  <span style={{ fontSize: 11, color: COLORS.textMuted, flexShrink: 0, whiteSpace: "nowrap" }}>⏱ {u.duration} min</span>
+                </div>
               </div>
-            </Card>
+            </div>
           ))}
-          <div onClick={() => {}} style={{ background: "transparent", border: `2px dashed ${COLORS.border}`, borderRadius: 12, padding: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, color: COLORS.textMuted, minHeight: 120 }}
+
+          {/* Neue Übung anlegen */}
+          <div
+            onClick={() => setShowUebungModal(true)}
+            style={{ background: "transparent", border: `2px dashed ${COLORS.border}`, borderRadius: 12, padding: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, color: COLORS.textMuted, minHeight: 120 }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.green; e.currentTarget.style.color = COLORS.green; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.textMuted; }}
-          ><span style={{ fontSize: 22 }}>+</span><span style={{ fontWeight: 600, fontSize: 13 }}>Übung anlegen</span></div>
+          >
+            <span style={{ fontSize: 22 }}>+</span>
+            <span style={{ fontWeight: 600, fontSize: 13 }}>Übung anlegen</span>
+          </div>
         </div>
+
+        {showUebungModal && (
+          <UebungModal
+            categories={categories}
+            onSave={payload => handleSaveUebung(payload, null)}
+            onClose={() => setShowUebungModal(false)}
+          />
+        )}
+        {editingUebung && (
+          <UebungModal
+            categories={categories}
+            initialData={editingUebung}
+            onSave={payload => handleSaveUebung(payload, editingUebung.id)}
+            onDelete={() => handleDeleteUebung(editingUebung.id)}
+            onClose={() => setEditingUebung(null)}
+          />
+        )}
       </div>
     );
   }

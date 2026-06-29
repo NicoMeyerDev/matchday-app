@@ -134,3 +134,21 @@ export function updateTrainingBlock(id, payload) {
 export function createTrainingBlock(payload) {
   return request("/training/training-blocks/", { method: "POST", body: JSON.stringify(payload) });
 }
+
+// ── Übungen ──
+export function fetchUebungen() { return request("/training/uebungen/"); }
+
+export function createUebung(payload) {
+  return request("/training/uebungen/", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function updateUebung(id, payload) {
+  return request(`/training/uebungen/${id}/`, { method: "PATCH", body: JSON.stringify(payload) });
+}
+
+export function deleteUebung(id) {
+  return request(`/training/uebungen/${id}/`, { method: "DELETE" });
+}
+
+// ── Kategorien ──
+export function fetchCategories() { return request("/training/categories/"); }

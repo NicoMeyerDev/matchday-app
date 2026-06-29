@@ -2,7 +2,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 
 from clubs.models import Club
-from .models import Training, TrainingsBlock
+from .models import Training, TrainingsBlock, Category, Uebung
 from .serializers import TrainingSerializer, TrainingsBlockSerializer, CategorySerializer, UebungSerializer
 
 class TrainingViewSet(ModelViewSet):

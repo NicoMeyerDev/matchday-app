@@ -10,7 +10,7 @@ class Player(models.Model):
     und Notizen reichen für ein erstes nutzbares Coaching-Board aus.
     """
     club = models.ForeignKey('clubs.Club', related_name='players', on_delete=models.CASCADE)
-    name = models.CharField(max_length=120)
+    name = models.CharField(max_length=120) 
     shirt_number = models.PositiveIntegerField(null=True, blank=True)
     preferred_positions = models.CharField(max_length=120, blank=True)
     foot = models.CharField(max_length=10, blank=True, choices=[('left', 'Links'), ('right', 'Rechts'), ('both', 'Beidfüßig')])

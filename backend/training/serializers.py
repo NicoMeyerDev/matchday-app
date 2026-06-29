@@ -32,9 +32,16 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class UebungSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True)
-    
+    category_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        many=True,
+        write_only=True,
+        source='categories',
+        required=False,
+    )
+
     class Meta:
         model = Uebung
-        fields = ['id', 'name', 'description', 'duration', 'player_count', 'categories', 'created_at']
+        fields = ['id', 'name', 'description', 'duration', 'player_count', 'categories', 'category_ids', 'created_at']
         read_only_fields = ['created_at']
         
