@@ -75,12 +75,14 @@ function getWeekDays(ref) {
 function getMonthDays(ref) {
   const year = ref.getFullYear();
   const month = ref.getMonth();
-  const firstDay = new Date(year, month, 1);
-  let offset = firstDay.getDay();
+  let offset = new Date(year, month, 1).getDay();
   if (offset === 0) offset = 7;
-  const days = Array(offset - 1).fill(null);
+  const days = [];
+  for (let i = offset - 1; i > 0; i--) days.push({ date: new Date(year, month, 1 - i), isCurrentMonth: false });
   const last = new Date(year, month + 1, 0).getDate();
-  for (let i = 1; i <= last; i++) days.push(new Date(year, month, i));
+  for (let i = 1; i <= last; i++) days.push({ date: new Date(year, month, i), isCurrentMonth: true });
+  let next = 1;
+  while (days.length % 7 !== 0) days.push({ date: new Date(year, month + 1, next++), isCurrentMonth: false });
   return days;
 }
 
@@ -412,6 +414,7 @@ export default function TrainingsHub({ onBack }) {
 
   const [view, setView] = useState("dashboard"); // "dashboard" | "create" | "exercises"
   const [calendarMode, setCalendarMode] = useState("week");
+  const [currentMonth, setCurrentMonth] = useState(new Date(todayDate.getFullYear(), todayDate.getMonth(), 1));
   const [filterKat, setFilterKat] = useState("Alle");
   const [trainingsTyp, setTrainingsTyp] = useState(null);
 
@@ -801,7 +804,7 @@ export default function TrainingsHub({ onBack }) {
   const trainingsByDate = new Map();
   trainings.forEach(t => { const list = trainingsByDate.get(t.date) || []; list.push(t); trainingsByDate.set(t.date, list); });
   const weekDays = getWeekDays(todayDate);
-  const monthDays = getMonthDays(todayDate);
+  const monthDays = getMonthDays(currentMonth);
 
   return (
     <div style={{ position: "relative", background: COLORS.bg, minHeight: "100vh", color: COLORS.text, fontFamily: "Inter, -apple-system, sans-serif" }}>
@@ -820,11 +823,17 @@ export default function TrainingsHub({ onBack }) {
           {/* Kalender */}
           <Card style={{ padding: "16px 18px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>
-                {calendarMode === "week"
-                  ? `${weekDays[0].getDate()}. – ${weekDays[6].getDate()}. ${MONTH_NAMES[weekDays[6].getMonth()]} ${weekDays[6].getFullYear()}`
-                  : `${MONTH_NAMES[todayDate.getMonth()]} ${todayDate.getFullYear()}`}
-              </div>
+              {calendarMode === "month" ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <button onClick={() => setCurrentMonth(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 4px" }}>‹</button>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>{MONTH_NAMES[currentMonth.getMonth()]} {currentMonth.getFullYear()}</div>
+                  <button onClick={() => setCurrentMonth(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 4px" }}>›</button>
+                </div>
+              ) : (
+                <div style={{ fontWeight: 700, fontSize: 14 }}>
+                  {`${weekDays[0].getDate()}. – ${weekDays[6].getDate()}. ${MONTH_NAMES[weekDays[6].getMonth()]} ${weekDays[6].getFullYear()}`}
+                </div>
+              )}
               <button onClick={() => setCalendarMode(m => m === "week" ? "month" : "week")} style={{ background: "none", border: `1px solid ${COLORS.borderLight}`, borderRadius: 6, padding: "4px 10px", color: COLORS.textMuted, fontSize: 11, cursor: "pointer" }}>
                 {calendarMode === "week" ? "Monat ansehen ↓" : "Woche ansehen ↑"}
               </button>
@@ -864,21 +873,20 @@ export default function TrainingsHub({ onBack }) {
                   {WEEKDAY_LABELS.map(l => <div key={l} style={{ fontSize: 10, color: COLORS.textMuted, fontWeight: 600, textAlign: "center", textTransform: "uppercase", letterSpacing: 0.5 }}>{l}</div>)}
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
-                  {monthDays.map((day, i) => {
-                    if (!day) return <div key={`e-${i}`} />;
-                    const ds = toISODate(day);
+                  {monthDays.map(({ date, isCurrentMonth }, i) => {
+                    const ds = toISODate(date);
                     const isToday = ds === todayStr;
-                    const dayTrainings = trainingsByDate.get(ds) || [];
+                    const dayTrainings = isCurrentMonth ? (trainingsByDate.get(ds) || []) : [];
                     const hasTraining = dayTrainings.length > 0;
                     return (
                       <div key={i}
-                        onClick={() => hasTraining ? openTraining(dayTrainings[0]) : openDayForCreate(ds)}
-                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "4px 2px", borderRadius: 6, cursor: "pointer", transition: "background 0.12s" }}
-                        onMouseEnter={e => { e.currentTarget.style.background = hasTraining ? "#0d1f0d" : "#1a1a1a"; }}
+                        onClick={() => isCurrentMonth && (hasTraining ? openTraining(dayTrainings[0]) : openDayForCreate(ds))}
+                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "4px 2px", borderRadius: 6, cursor: isCurrentMonth ? "pointer" : "default", transition: "background 0.12s", opacity: isCurrentMonth ? 1 : 0.25 }}
+                        onMouseEnter={e => { if (isCurrentMonth) e.currentTarget.style.background = hasTraining ? "#0d1f0d" : "#1a1a1a"; }}
                         onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
                       >
                         <div style={{ width: 24, height: 24, borderRadius: "50%", background: isToday ? COLORS.green : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <span style={{ fontSize: 11, fontWeight: isToday ? 700 : 400, color: isToday ? "#fff" : COLORS.text }}>{day.getDate()}</span>
+                          <span style={{ fontSize: 11, fontWeight: isToday ? 700 : 400, color: isToday ? "#fff" : COLORS.text }}>{date.getDate()}</span>
                         </div>
                         {hasTraining && (
                           <div onClick={e => { e.stopPropagation(); openTraining(dayTrainings[0]); }} style={{ background: "#0d1f0d", borderRadius: 3, padding: "2px 4px", cursor: "pointer", maxWidth: "100%" }}>
