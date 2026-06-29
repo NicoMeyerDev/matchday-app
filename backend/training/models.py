@@ -34,3 +34,33 @@ class TrainingsBlock(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.start_time} - {self.end_time})"    
+
+
+class Category(models.Model):
+    """
+    Kategorie/Tag für Übungen (z.B. Passspiel, Pressing, Technik)
+    """
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Uebung(models.Model):
+    """
+    Speichert eine Übung die einer Club-Datenbank gehört.
+    """
+    club = models.ForeignKey('clubs.Club', related_name='uebungen', on_delete=models.CASCADE)
+    name = models.CharField(max_length=120)
+    description = models.TextField(blank=True)
+    duration = models.PositiveIntegerField(help_text='Dauer in Minuten')
+    player_count = models.CharField(max_length=20, blank=True)  # z.B. "4v2", "6v6"
+    categories = models.ManyToManyField(Category, blank=True, related_name='uebungen')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+    def __str__(self):
+        return self.name
+    
+
+    

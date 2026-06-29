@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Training, TrainingsBlock
+from .models import Training, TrainingsBlock, Category, Uebung
 
 class TrainingSerializer(serializers.ModelSerializer):
     """
@@ -24,3 +24,17 @@ class TrainingsBlockSerializer(serializers.ModelSerializer):
         model = TrainingsBlock
         fields = '__all__'
         read_only_fields = ['created_at', 'training']        
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
+
+class UebungSerializer(serializers.ModelSerializer):
+    categories = CategorySerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Uebung
+        fields = ['id', 'name', 'description', 'duration', 'player_count', 'categories', 'created_at']
+        read_only_fields = ['created_at']
+        

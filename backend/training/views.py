@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from clubs.models import Club
 from .models import Training, TrainingsBlock
-from .serializers import TrainingSerializer, TrainingsBlockSerializer
+from .serializers import TrainingSerializer, TrainingsBlockSerializer, CategorySerializer, UebungSerializer
 
 class TrainingViewSet(ModelViewSet):
     serializer_class = TrainingSerializer
@@ -34,3 +34,22 @@ class TrainingsBlockViewSet(ModelViewSet):
         if training_id:
             qs = qs.filter(training_id=training_id)
         return qs
+
+class UebungViewSet(ModelViewSet):
+    serializer_class = UebungSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Uebung.objects.filter(club__owner=self.request.user)
+
+    def perform_create(self, serializer):
+        club = Club.objects.filter(owner=self.request.user).first()
+        serializer.save(club=club)
+
+class CategoryViewSet(ModelViewSet):
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get']  # nur lesen, kein anlegen/löschen
+
+    def get_queryset(self):
+        return Category.objects.all()        
