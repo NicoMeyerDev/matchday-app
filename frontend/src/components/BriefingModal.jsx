@@ -252,8 +252,8 @@ function buildRoles(side) {
     ],
     wide: [
       {
-        key: "fluegelverteidiger",
-        label: "Flügelverteidiger",
+        key: "fluegelspieler",
+        label: "Flügelspieler",
         dx: 0, dy: -75,
         keywords: [
           "Bleib breit an der Linie",

@@ -87,7 +87,7 @@ const S = `
   .pm-report-lineup { font-size: 12px; color: #52525b; margin-bottom: 10px; }
   .pm-report-notes { font-size: 13px; color: #71717a; line-height: 1.6; white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .pm-report-actions { display: flex; gap: 8px; flex-shrink: 0; }
-  .pm-btn-icon { width: 34px; height: 34px; border-radius: 8px; border: 1px solid #1e1e24; background: transparent; color: #52525b; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, color 0.2s; }
+  .pm-btn-icon { width: 44px; height: 44px; border-radius: 8px; border: 1px solid #1e1e24; background: transparent; color: #52525b; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, color 0.2s; flex-shrink: 0; }
   .pm-btn-icon:hover { border-color: #3f3f46; color: #a1a1aa; }
   .pm-btn-icon.danger:hover { border-color: #7f1d1d; color: #f87171; }
 
@@ -115,7 +115,7 @@ const S = `
 const EMPTY_FORM = { lineup: "", opponent: "", result: "", notes: "" };
 
 function getEventBadge(ev) {
-  if (ev.event_type === 'tor') return ev.for_us ? { cls: 'badge-tor-us', label: '⚽ Tor für uns' } : { cls: 'badge-tor-them', label: '⚽ Gegenteil' };
+  if (ev.event_type === 'tor') return ev.for_us ? { cls: 'badge-tor-us', label: '⚽ Tor für uns' } : { cls: 'badge-tor-them', label: '⚽ Gegentor' };
   if (ev.event_type === 'karte') {
     if (ev.card_type === 'yellow') return { cls: 'badge-yellow', label: '🟨 Gelb' };
     if (ev.card_type === 'yellow_red') return { cls: 'badge-yellow-red', label: '🟨🟥 Gelb-Rot' };
@@ -218,12 +218,15 @@ export default function PostMatch({ matchEvents = [], initialReportId = null, on
   return (
     <>
       <style>{S}</style>
-      <div className="pm-root">
+      <div className="pm-root page-fade-in">
         <div className="pm-header">
           <div>
             <div className="pm-title-label">Saison 2025/26</div>
             <div className="pm-title">Post-Match</div>
           </div>
+          {!showForm && (
+            <button className="pm-btn-new" onClick={handleNew}>+ Neuen Bericht</button>
+          )}
         </div>
 
         {error && <div className="pm-error">{error}</div>}
@@ -271,7 +274,11 @@ export default function PostMatch({ matchEvents = [], initialReportId = null, on
         {reports.length === 0 ? (
           <div className="pm-empty">
             <span className="pm-empty-icon">📋</span>
-            Noch kein Spielbericht vorhanden.<br />Erstelle deinen ersten Bericht nach dem nächsten Spiel.
+            Noch kein Spielbericht vorhanden.<br />Lege deinen ersten Bericht nach dem nächsten Spiel an.
+            <br />
+            <button className="pm-btn-new" style={{ marginTop: 16, fontSize: 14 }} onClick={handleNew}>
+              Ersten Bericht anlegen
+            </button>
           </div>
         ) : (
           <div className="pm-list">

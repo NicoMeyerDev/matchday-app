@@ -199,7 +199,7 @@ export default function Onboarding({ user, onClubCreated }) {
       <style>{S}</style>
       <div className="ob-root">
         <div className="ob-card">
-          <div className="ob-logo">Matchday Coaching</div>
+          <div className="ob-logo">TAKTIX</div>
 
           <div className="ob-eyebrow">Willkommen, {user?.username}</div>
           <h1 className="ob-heading">Dein <span>Verein</span> fehlt noch.</h1>

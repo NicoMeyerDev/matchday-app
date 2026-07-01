@@ -870,7 +870,12 @@ export default function Players({ initialPlayerId, onPlayersChanged } = {}) {
     grouped[group].push(p);
   });
 
-  if (loading) return <div style={{ padding: 40, color: '#555' }}>Lade Kader...</div>;
+  if (loading) return (
+    <div className="loading-screen">
+      <div className="spinner" />
+      <span>Kader wird geladen…</span>
+    </div>
+  );
 
   if (selectedPlayer) {
     return (
@@ -884,7 +889,7 @@ export default function Players({ initialPlayerId, onPlayersChanged } = {}) {
   return (
     <>
       <style>{S}</style>
-      <div className="players-root">
+      <div className="players-root page-fade-in">
         <div className="players-topbar">
           <div className="players-topbar-left">
             <div className="page-label">Saison 2025/26</div>

@@ -206,8 +206,8 @@ export default function Layout({ user, club, onLogout, currentPage, onNavigate, 
           </button>
 
           <div className="sidebar-logo hide-on-collapse">
-            <div className="app-name">Matchday</div>
-            <div className="app-sub">Coaching App</div>
+            <div className="app-name">TAKTIX</div>
+            <div className="app-sub">Coaching Platform</div>
           </div>
 
           <div className="sidebar-club">

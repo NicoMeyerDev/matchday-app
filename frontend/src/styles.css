@@ -543,3 +543,98 @@ h1 { margin: 0; font-size: 22px; font-weight: 700; }
   .control-panel, .compact-control-panel { padding: 10px 16px; margin-bottom: 12px; }
   h1 { font-size: 26px; }
 }
+
+/* Spinner */
+@keyframes taktix-spin { to { transform: rotate(360deg); } }
+.spinner {
+  display: inline-block;
+  width: 26px;
+  height: 26px;
+  border: 2px solid #1e1e24;
+  border-top-color: #22c55e;
+  border-radius: 50%;
+  animation: taktix-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* Seitenwechsel Fade-In */
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.page-fade-in { animation: page-fade-in 0.18s ease-out; }
+
+/* Lade-Screen */
+.loading-screen {
+  min-height: 100vh;
+  background: #07070a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #52525b;
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  font-size: 14px;
+}
+
+/* Toast Overlay — fixed unten mittig */
+.toast-overlay {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  pointer-events: none;
+  animation: page-fade-in 0.18s ease-out;
+}
+.toast-error {
+  background: #1f0f0f;
+  border: 1px solid #3f1f1f;
+  color: #f87171;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 13px;
+  white-space: nowrap;
+  max-width: 90vw;
+  font-family: 'DM Sans', 'Inter', sans-serif;
+}
+.toast-info {
+  background: #0d1f0e;
+  border: 1px solid #22c55e33;
+  color: #22c55e;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 13px;
+  white-space: nowrap;
+  max-width: 90vw;
+  font-family: 'DM Sans', 'Inter', sans-serif;
+}
+
+/* Leerer Zustand — CTA-Bereich */
+.empty-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 16px;
+  text-align: center;
+  color: #3f3f46;
+  font-size: 13px;
+  font-family: 'DM Sans', 'Inter', sans-serif;
+}
+.empty-cta-icon { font-size: 28px; }
+.empty-cta-text { font-style: italic; color: #2a2a35; }
+.empty-cta-btn {
+  padding: 9px 18px;
+  background: transparent;
+  border: 1px solid #22c55e44;
+  border-radius: 8px;
+  color: #22c55e;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  transition: background 0.15s, border-color 0.15s;
+  min-height: 44px;
+}
+.empty-cta-btn:hover { background: #0d2010; border-color: #22c55e88; }

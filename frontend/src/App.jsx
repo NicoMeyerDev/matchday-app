@@ -157,7 +157,12 @@ export default function App() {
   }, [activePosition, matchingPlayersForActivePosition, players]);
 
   if (isCheckingAuth) {
-  return <main style={{ color: "#fff", padding: 40, background: "#07070a", minHeight: "100vh" }}>Lade Sitzung...</main>;
+    return (
+      <main className="loading-screen">
+        <div className="spinner" />
+        <span>Sitzung wird geladen…</span>
+      </main>
+    );
   }
 
   if (!user) {
@@ -172,7 +177,12 @@ export default function App() {
     );
   }
 
-  if (isLoading) return <main style={{ color: "#fff", padding: 40, background: "#07070a", minHeight: "100vh" }}>Lade Daten...</main>;
+  if (isLoading) return (
+    <main className="loading-screen">
+      <div className="spinner" />
+      <span>Daten werden geladen…</span>
+    </main>
+  );
 
   if (clubLoaded && !club) {
     return <Onboarding user={user} onClubCreated={(c) => setClub(c)} />;
@@ -491,6 +501,13 @@ async function handleLogEvent(event) {
   await refreshMatchReports();
 }
   const renderPage = () => {
+    const toast = (
+      <>
+        {error && <div className="toast-overlay"><div className="toast-error">{error}</div></div>}
+        {info  && <div className="toast-overlay"><div className="toast-info">{info}</div></div>}
+      </>
+    );
+
     switch (currentPage) {
       case "hub":
         return (
@@ -529,11 +546,10 @@ async function handleLogEvent(event) {
         );
       case "preparation":
         return (
-          <main className="app-shell">
+          <main className="app-shell page-fade-in">
+            {toast}
             <BackButton onClick={() => setCurrentPage("hub")} />
             <Header selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
-            {error && <div className="error-box">{error}</div>}
-            {info && <div className="info-box">{info}</div>}
             <FormationSelector formations={formations} lineups={lineups} selectedFormationId={selectedFormationId} selectedLineupId={selectedLineupId} isSaving={isSaving} lineupTitle={lineupTitle} opponent={opponent} onLineupTitleChange={setLineupTitle} onOpponentChange={setOpponent} onSelectFormation={handleSelectFormation} onSelectLineup={handleSelectLineup} onCreateLineup={handleCreateLineup} onUpdateLineup={handleUpdateLineup} onDeleteLineup={handleDeleteLineup} />
             <div style={{ display: "flex", justifyContent: "flex-end", padding: "0 12px 8px" }}>
               <LineupExportButton formation={selectedFormation} assignedSlots={assignedSlots} club={club} lineupTitle={lineupTitle} opponent={opponent} />
@@ -556,11 +572,10 @@ async function handleLogEvent(event) {
         );
       case "matchday":
         return (
-          <main className="app-shell">
+          <main className="app-shell page-fade-in">
+            {toast}
             <BackButton onClick={() => setCurrentPage("hub")} />
             <Header selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
-            {error && <div className="error-box">{error}</div>}
-            {info && <div className="info-box">{info}</div>}
             <MatchTimerBar ref={timerBarRef} onEventsUpdate={(e) => setMatchEvents(e)} onMatchEnd={handleMatchEnd} onLogEvent={handleLogEvent} />
             <MatchdayFormationBar
               lineups={lineups} selectedLineupId={selectedLineupId} onSelectLineup={handleSelectLineup} />

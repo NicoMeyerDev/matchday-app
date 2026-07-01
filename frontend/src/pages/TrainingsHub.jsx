@@ -62,7 +62,7 @@ function toISODate(d) {
 
 function formatDate(isoDate) {
   const d = new Date(isoDate + "T00:00:00");
-  return `${d.toLocaleDateString("de-DE", { weekday: "short" })}, ${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.`;
+  return `${d.toLocaleDateString("de-DE", { weekday: "short" })}, ${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
 }
 
 function getWeekDays(ref) {
@@ -562,8 +562,8 @@ export default function TrainingsHub({ onBack }) {
   // ── Detail-Ansicht ─────────────────────────────────────────────────
   if (selectedTraining) {
     return (
-      <div style={{ background: COLORS.bg, minHeight: "100vh", color: COLORS.text, fontFamily: "Inter, -apple-system, sans-serif", padding: 24 }}>
-        <div onClick={() => setSelectedTraining(null)} style={{ fontSize: 11, color: COLORS.green, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700, marginBottom: 16, cursor: "pointer" }}>← Zurück</div>
+      <div style={{ background: COLORS.bg, minHeight: "100vh", color: COLORS.text, fontFamily: "Inter, -apple-system, sans-serif", padding: 24 }} className="page-fade-in">
+        <button onClick={() => setSelectedTraining(null)} style={{ background: "none", border: "none", fontSize: 11, color: COLORS.green, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700, marginBottom: 16, cursor: "pointer", padding: "8px 0", minHeight: 44, display: "inline-flex", alignItems: "center" }}>← Zurück</button>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5, marginBottom: 4 }}>{selectedTraining.name}</div>
@@ -579,7 +579,12 @@ export default function TrainingsHub({ onBack }) {
           </div>
         </Card>
         <div style={{ fontSize: 11, color: COLORS.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Trainingsblöcke</div>
-        {blocksLoading && <div style={{ color: COLORS.textMuted, fontSize: 13 }}>Lade Blöcke…</div>}
+        {blocksLoading && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, color: COLORS.textMuted, fontSize: 13 }}>
+            <div className="spinner" style={{ width: 18, height: 18 }} />
+            <span>Blöcke werden geladen…</span>
+          </div>
+        )}
         {!blocksLoading && blocks.length === 0 && <div style={{ color: COLORS.textMuted, fontSize: 13 }}>Keine Blöcke vorhanden.</div>}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {blocks.map((block, idx) => {
@@ -621,8 +626,8 @@ export default function TrainingsHub({ onBack }) {
   // ── Training anlegen ───────────────────────────────────────────────
   if (view === "create") {
     return (
-      <div style={{ background: COLORS.bg, minHeight: "100vh", color: COLORS.text, fontFamily: "Inter, -apple-system, sans-serif", padding: 24 }}>
-        <div onClick={() => { if (trainingsTyp) { setTrainingsTyp(null); setFormBlockExercises({}); setFormFreeExercises([]); setFormPickerOpen(null); setFormError(""); } else { setView("dashboard"); } }} style={{ fontSize: 11, color: COLORS.green, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700, marginBottom: 20, cursor: "pointer" }}>← Zurück</div>
+      <div style={{ background: COLORS.bg, minHeight: "100vh", color: COLORS.text, fontFamily: "Inter, -apple-system, sans-serif", padding: 24 }} className="page-fade-in">
+        <button onClick={() => { if (trainingsTyp) { setTrainingsTyp(null); setFormBlockExercises({}); setFormFreeExercises([]); setFormPickerOpen(null); setFormError(""); } else { setView("dashboard"); } }} style={{ background: "none", border: "none", fontSize: 11, color: COLORS.green, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700, marginBottom: 20, cursor: "pointer", padding: "8px 0", minHeight: 44, display: "inline-flex", alignItems: "center" }}>← Zurück</button>
         <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 24 }}>Training anlegen{trainingsTyp && <span style={{ color: trainingsTyp === "Klassisch" ? COLORS.green : COLORS.orange, fontWeight: 400, fontSize: 16, marginLeft: 10 }}>— {trainingsTyp}</span>}</div>
         <div style={{ maxWidth: 640 }}>
           {!trainingsTyp ? (
@@ -714,8 +719,8 @@ export default function TrainingsHub({ onBack }) {
     });
 
     return (
-      <div style={{ background: COLORS.bg, minHeight: "100vh", color: COLORS.text, fontFamily: "Inter, -apple-system, sans-serif", padding: 24 }}>
-        <div onClick={() => { setView("dashboard"); setSearchQuery(""); setFilterKat("Alle"); }} style={{ fontSize: 11, color: COLORS.green, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700, marginBottom: 20, cursor: "pointer" }}>← Zurück</div>
+      <div style={{ background: COLORS.bg, minHeight: "100vh", color: COLORS.text, fontFamily: "Inter, -apple-system, sans-serif", padding: 24 }} className="page-fade-in">
+        <button onClick={() => { setView("dashboard"); setSearchQuery(""); setFilterKat("Alle"); }} style={{ background: "none", border: "none", fontSize: 11, color: COLORS.green, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700, marginBottom: 20, cursor: "pointer", padding: "8px 0", minHeight: 44, display: "inline-flex", alignItems: "center" }}>← Zurück</button>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 20, fontWeight: 800 }}>Übungsdatenbank</div>
           <span style={{ fontSize: 12, color: COLORS.textMuted }}>{uebungen.length} Übung{uebungen.length !== 1 ? "en" : ""}</span>
@@ -807,7 +812,7 @@ export default function TrainingsHub({ onBack }) {
   const monthDays = getMonthDays(currentMonth);
 
   return (
-    <div style={{ position: "relative", background: COLORS.bg, minHeight: "100vh", color: COLORS.text, fontFamily: "Inter, -apple-system, sans-serif" }}>
+    <div style={{ position: "relative", background: COLORS.bg, minHeight: "100vh", color: COLORS.text, fontFamily: "Inter, -apple-system, sans-serif" }} className="page-fade-in">
 
       {/* Topbar */}
       <div style={{ padding: "20px 24px 0" }}>
@@ -909,8 +914,20 @@ export default function TrainingsHub({ onBack }) {
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ fontSize: 10, color: COLORS.textMuted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Letzte Trainings</div>
 
-          {isLoading && <div style={{ color: COLORS.textMuted, fontSize: 13 }}>Lade…</div>}
-          {!isLoading && sortedTrainings.length === 0 && <div style={{ color: COLORS.textMuted, fontSize: 13 }}>Noch keine Trainings vorhanden.</div>}
+          {isLoading && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, color: COLORS.textMuted, fontSize: 13 }}>
+              <div className="spinner" style={{ width: 18, height: 18 }} />
+              <span>Trainings werden geladen…</span>
+            </div>
+          )}
+          {!isLoading && sortedTrainings.length === 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
+              <div style={{ color: COLORS.textMuted, fontSize: 13, fontStyle: "italic" }}>Noch keine Trainings geplant.</div>
+              <button onClick={() => setView("create")} style={{ background: "none", border: `1px solid ${COLORS.green}44`, borderRadius: 8, padding: "8px 14px", color: COLORS.green, fontSize: 12, cursor: "pointer", minHeight: 44 }}>
+                Erstes Training anlegen
+              </button>
+            </div>
+          )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {sortedTrainings.slice(0, 4).map((t, i) => {

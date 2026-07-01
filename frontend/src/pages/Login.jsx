@@ -196,7 +196,7 @@ export default function Login({ onLoginSuccess, onGoToRegister }) {
       <style>{styles}</style>
       <div className="auth-root">
         <div className="auth-card">
-          <div className="auth-logo">Matchday Coaching</div>
+          <div className="auth-logo">TAKTIX</div>
 
           <h1 className="auth-heading">Anmelden</h1>
           <p className="auth-sub">Willkommen zurück, Trainer.</p>
@@ -229,7 +229,7 @@ export default function Login({ onLoginSuccess, onGoToRegister }) {
             {error && <div className="auth-error">{error}</div>}
 
             <button className="auth-btn" type="submit" disabled={loading}>
-              {loading ? "Wird geladen..." : "Einloggen"}
+              {loading ? "Anmelden…" : "Einloggen"}
             </button>
           </form>
 

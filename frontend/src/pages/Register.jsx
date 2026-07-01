@@ -216,7 +216,7 @@ export default function Register({ onGoToLogin }) {
       <style>{styles}</style>
       <div className="auth-root">
         <div className="auth-card">
-          <div className="auth-logo">Matchday Coaching</div>
+          <div className="auth-logo">TAKTIX</div>
 
           <h1 className="auth-heading">Registrieren</h1>
           <p className="auth-sub">Erstelle dein Trainer-Konto.</p>
@@ -274,7 +274,7 @@ export default function Register({ onGoToLogin }) {
             {success && <div className="auth-success">{success}</div>}
 
             <button className="auth-btn" type="submit" disabled={loading}>
-              {loading ? "Wird erstellt..." : "Konto erstellen"}
+              {loading ? "Konto erstellen…" : "Konto erstellen"}
             </button>
           </form>
 

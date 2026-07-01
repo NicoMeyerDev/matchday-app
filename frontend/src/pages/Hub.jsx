@@ -91,7 +91,7 @@ export default function Hub({ user, players, reports, onNavigate, onSelectPlayer
   return (
     <>
       <style>{S}</style>
-      <div className="hub-root">
+      <div className="hub-root page-fade-in">
         <div className="hub-topbar">
           <div className="hub-topbar-left">
             <div className="page-label">Saison 2025/26</div>
@@ -161,7 +161,10 @@ export default function Hub({ user, players, reports, onNavigate, onSelectPlayer
               <div className="info-card">
                 <div className="section-label">Letzte Berichte</div>
                 {recentReports.length === 0 ? (
-                  <div className="report-empty">Noch keine Berichte vorhanden.</div>
+                  <div className="empty-cta">
+                    <span className="empty-cta-text">Noch keine Spielberichte vorhanden.</span>
+                    <button className="empty-cta-btn" onClick={() => onNavigate("postmatch")}>Ersten Bericht anlegen</button>
+                  </div>
                 ) : (
                   recentReports.map(r => (
                     <div key={r.id} className="report-item" onClick={() => onSelectReport(r.id)} style={{cursor:'pointer'}}>
@@ -178,7 +181,10 @@ export default function Hub({ user, players, reports, onNavigate, onSelectPlayer
               <div className="info-card">
                 <div className="section-label">Zuletzt angeschaut</div>
                 {recentPlayers.length === 0 ? (
-                  <div className="recent-empty">Noch keine Spieler angeschaut.</div>
+                  <div className="empty-cta">
+                    <span className="empty-cta-text">Noch keine Spieler angeschaut.</span>
+                    <button className="empty-cta-btn" onClick={() => onNavigate("players")}>Zum Kader</button>
+                  </div>
                 ) : (
                   recentPlayers.map(p => (
                     <div key={p.id} className="player-row" onClick={() => onSelectPlayer(p.id)}>
