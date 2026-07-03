@@ -549,11 +549,24 @@ async function handleLogEvent(event) {
           <main className="app-shell page-fade-in">
             {toast}
             <BackButton onClick={() => setCurrentPage("hub")} />
-            <Header selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
-            <FormationSelector formations={formations} lineups={lineups} selectedFormationId={selectedFormationId} selectedLineupId={selectedLineupId} isSaving={isSaving} lineupTitle={lineupTitle} opponent={opponent} onLineupTitleChange={setLineupTitle} onOpponentChange={setOpponent} onSelectFormation={handleSelectFormation} onSelectLineup={handleSelectLineup} onCreateLineup={handleCreateLineup} onUpdateLineup={handleUpdateLineup} onDeleteLineup={handleDeleteLineup} />
-            <div style={{ display: "flex", justifyContent: "flex-end", padding: "0 12px 8px" }}>
-              <LineupExportButton formation={selectedFormation} assignedSlots={assignedSlots} club={club} lineupTitle={lineupTitle} opponent={opponent} />
-            </div>
+            <Header title="Vorbereitung" selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
+            <FormationSelector
+              formations={formations}
+              lineups={lineups}
+              selectedFormationId={selectedFormationId}
+              selectedLineupId={selectedLineupId}
+              isSaving={isSaving}
+              lineupTitle={lineupTitle}
+              opponent={opponent}
+              onLineupTitleChange={setLineupTitle}
+              onOpponentChange={setOpponent}
+              onSelectFormation={handleSelectFormation}
+              onSelectLineup={handleSelectLineup}
+              onCreateLineup={handleCreateLineup}
+              onUpdateLineup={handleUpdateLineup}
+              onDeleteLineup={handleDeleteLineup}
+              exportButton={<LineupExportButton formation={selectedFormation} assignedSlots={assignedSlots} club={club} lineupTitle={lineupTitle} opponent={opponent} />}
+            />
             <div className={`workspace ${isPlayerDrawerOpen ? "drawer-open" : "drawer-closed"} ${isBenchOpen || isNotesOpen ? "right-open" : "right-closed"}`}>
               <div className={mobileTab !== "spieler" ? "mobile-hidden" : ""}>
                 <PlayerList players={players} selectedPlayerId={selectedPlayerId} isOpen={isPlayerDrawerOpen} assignedSlots={assignedSlots} substitutes={substitutes} onToggle={() => setIsPlayerDrawerOpen((s) => !s)} onSelectPlayer={setSelectedPlayerId} onAddToBench={handleAddToBench} onAddPlayer={() => setIsAddPlayerOpen(true)} />
@@ -575,7 +588,7 @@ async function handleLogEvent(event) {
           <main className="app-shell page-fade-in">
             {toast}
             <BackButton onClick={() => setCurrentPage("hub")} />
-            <Header selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
+            <Header title="Matchday" selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
             <MatchTimerBar ref={timerBarRef} onEventsUpdate={(e) => setMatchEvents(e)} onMatchEnd={handleMatchEnd} onLogEvent={handleLogEvent} />
             <MatchdayFormationBar
               lineups={lineups} selectedLineupId={selectedLineupId} onSelectLineup={handleSelectLineup} />

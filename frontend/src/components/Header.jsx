@@ -1,13 +1,12 @@
 /**
  * Oberer Kopfbereich der App.
- * Zeigt Produktnamen, aktuelle Aufstellung und Gegner an.
+ * Zeigt den Seitentitel dezent an.
  */
-export default function Header({ selectedLineup, user, onLogout }) {
+export default function Header({ title, selectedLineup, user, onLogout }) {
   return (
     <header className="app-header">
       <div className="app-header-left">
-        <p className="eyebrow">Matchday Coaching App</p>
-        <h1>Aufstellung & Coaching</h1>
+        <h1 className="page-title">{title}</h1>
       </div>
     </header>
   );

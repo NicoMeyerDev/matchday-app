@@ -15,6 +15,7 @@ button { touch-action: manipulation; }
 .app-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 18px; }
 .eyebrow { margin: 0 0 4px; text-transform: uppercase; letter-spacing: .12em; font-size: 12px; color: #8fae9a; font-weight: 700; }
 h1 { margin: 0; font-size: 32px; }
+.page-title { margin: 0; font-size: 18px; font-weight: 600; color: #71717a; }
 .match-card, .panel { background: #1a1a24; border: 1px solid #1e1e24; border-radius: 18px; box-shadow: 0 10px 25px rgba(0, 0, 0, .3); }
 .match-card { padding: 14px 18px; min-width: 240px; display: grid; gap: 3px; }
 .match-card span, small, .muted, .section-title p { color: #65766a; }
@@ -165,7 +166,7 @@ textarea { width: 100%; min-height: 160px; resize: vertical; border: 1px solid #
 
 .saved-lineup-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
   gap: 8px;
   align-items: center;
 }
@@ -249,8 +250,14 @@ textarea { width: 100%; min-height: 160px; resize: vertical; border: 1px solid #
   top: 18px;
 }
 
+.side-stack .bench-panel .side-drawer-content {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
 .side-stack .bench-list {
-  max-height: 320px;
+  max-height: none;
+  overflow: visible;
 }
 
 .side-stack textarea {

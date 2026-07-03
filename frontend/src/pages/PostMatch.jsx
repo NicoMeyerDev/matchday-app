@@ -27,7 +27,7 @@ const S = `
   }
 
   .pm-title-label { font-size: 11px; letter-spacing: 0.18em; color: #22c55e; text-transform: uppercase; margin-bottom: 4px; }
-  .pm-title { font-family: 'Bebas Neue', sans-serif; font-size: 40px; letter-spacing: 0.04em; color: #fff; line-height: 1; }
+  .pm-title { font-family: 'DM Sans', sans-serif; font-size: 18px; font-weight: 600; letter-spacing: 0.01em; color: #a1a1aa; line-height: 1.2; }
 
   .pm-btn-new {
     padding: 12px 24px; background: #22c55e; color: #040f04; border: none;

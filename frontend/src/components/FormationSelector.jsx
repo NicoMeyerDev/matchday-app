@@ -13,6 +13,7 @@ export default function FormationSelector({
   onCreateLineup,
   onUpdateLineup,
   onDeleteLineup,
+  exportButton,
 }) {
   const [isOpen, setIsOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -86,6 +87,7 @@ export default function FormationSelector({
               <button type="button" className="primary-button" onClick={onCreateLineup} disabled={isSaving}>
                 Speichern
               </button>
+              {exportButton}
             </div>
           </label>
         </div>
