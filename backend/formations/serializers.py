@@ -1,4 +1,5 @@
 """Serializer für Formationen und ihre Spielfeldpositionen."""
+
 from rest_framework import serializers
 from .models import Formation, FormationPosition
 
@@ -8,7 +9,7 @@ class FormationPositionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FormationPosition
-        fields = ['id', 'label', 'x', 'y']
+        fields = ["id", "label", "x", "y"]
 
 
 class FormationSerializer(serializers.ModelSerializer):
@@ -23,4 +24,4 @@ class FormationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Formation
-        fields = ['id', 'name', 'description', 'positions']
+        fields = ["id", "name", "description", "positions"]

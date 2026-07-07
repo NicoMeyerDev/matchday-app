@@ -1,4 +1,5 @@
 """Datenbankmodelle für wiederverwendbare Fußballformationen."""
+
 from django.db import models
 
 
@@ -26,14 +27,16 @@ class FormationPosition(models.Model):
     Beispiel: x=50, y=90 bedeutet zentral und nah am eigenen Tor.
     """
 
-    formation = models.ForeignKey(Formation, related_name='positions', on_delete=models.CASCADE)
+    formation = models.ForeignKey(
+        Formation, related_name="positions", on_delete=models.CASCADE
+    )
     label = models.CharField(max_length=30)
     x = models.PositiveIntegerField()
     y = models.PositiveIntegerField()
 
     class Meta:
-        ordering = ['y', 'x']
+        ordering = ["y", "x"]
 
     def __str__(self):
         """Gibt Positionsbezeichnung und Formation für leichteres Debugging zurück."""
-        return f'{self.formation.name} - {self.label}'
+        return f"{self.formation.name} - {self.label}"

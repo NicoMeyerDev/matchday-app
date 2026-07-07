@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 /**
  * Wechsel-Briefing-Modal.
  * Poppt beim Spielerwechsel im Matchday auf.
- * Links: Mini-Spielfeld mit animiertem Laufweg (Spieler gleitet vom Start
- *        zur Zielposition, Endlosschleife, mit Geisterspur am Start).
- * Rechts: Rolle wählen (2 Buttons) + 3 Schlagworte aus Vorschlagsliste.
+ * Links: Mini-Spielfeld mit Zone der gewählten Rolle + animiertem Laufweg
+ *        der gewählten Aufgabe (Spieler gleitet vom Start zum Ziel, Endlosschleife,
+ *        mit Geisterspur am Start).
+ * Rechts: Rolle wählen (bestimmt NUR die Zone) + Aufgabe wählen (bestimmt NUR die Bewegung).
  */
 
 const STYLES = `
@@ -111,25 +112,30 @@ const STYLES = `
     background: rgba(34,197,94,0.15);
   }
 
-  /* Animierter aktiver Spieler */
-  .brief-mover {
+  /* Zone-Darstellung für Rolle (Rechteck, % relativ zum Feld) */
+  .brief-zone {
+    position: absolute;
+    background: rgba(34,197,94,0.16);
+    border: 1px dashed rgba(34,197,94,0.55);
+    border-radius: 8px;
+  }
+
+  /* Animierter aktiver Spieler auf %-Basis (Rolle→Zone / Aufgabe→Bewegung Modell).
+     animation-name/-duration werden pro Aufgabe inline gesetzt (siehe buildRunAnimation),
+     da die Anzahl Wegpunkte je Aufgabe variiert. */
+  .brief-mover-pct {
+    position: absolute;
     display: flex; flex-direction: column; align-items: center; gap: 3px;
-    animation-name: brief-run;
-    animation-duration: 2.8s;
+    transform: translate(-50%, -50%);
     animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
-  }
-  @keyframes brief-run {
-    0%   { transform: translate(0, 0); }
-    45%  { transform: translate(var(--dx, 0px), var(--dy, 0px)); }
-    55%  { transform: translate(var(--dx, 0px), var(--dy, 0px)); }
-    100% { transform: translate(0, 0); }
   }
 
   .brief-role-name { text-align: center; margin-top: 10px; font-size: 13px; color: #22c55e; font-weight: 700; }
 
   /* Rechte Seite */
   .brief-roles { display: flex; gap: 8px; margin-bottom: 16px; }
+  .brief-tasks { display: flex; gap: 8px; margin-bottom: 16px; }
   .brief-role-btn {
     flex: 1; padding: 10px; border-radius: 10px;
     border: 1px solid #1e1e24; background: #111116;
@@ -143,25 +149,6 @@ const STYLES = `
     font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
     color: #52525b; margin-bottom: 10px;
   }
-
-  .brief-keywords { display: flex; flex-direction: column; gap: 8px; }
-  .brief-keyword {
-    padding: 10px 12px; border-radius: 8px; text-align: left;
-    border: 1px solid #161619; background: #0a0a0e;
-    color: #3a3a42; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif;
-    display: flex; align-items: center; gap: 10px; transition: all 0.15s;
-  }
-  .brief-keyword:hover { color: #71717a; }
-  .brief-keyword.selected { border-color: #22c55e; background: #0d1f0e; color: #22c55e; }
-  .brief-keyword.disabled { cursor: not-allowed; }
-  .brief-keyword-check {
-    width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0;
-    border: 1px solid #232328; display: flex; align-items: center; justify-content: center;
-    font-size: 12px;
-  }
-  .brief-keyword.selected .brief-keyword-check { background: #22c55e; border-color: #22c55e; color: #040f04; }
-
-  .brief-counter { font-size: 11px; color: #52525b; margin-top: 10px; }
 
   .brief-foot {
     padding: 16px 22px; border-top: 1px solid #141418;
@@ -181,193 +168,338 @@ const STYLES = `
 `;
 
 // ---------------------------------------------------------------------
-// Rollen-Bibliothek: pro Positionsgruppe 2 Rollen mit Bewegung + Schlagworten
-// dx/dy = Bewegungs-Offset in px (relativ zur Start-Position).
-// "side" = +1 wenn Position links vom Zentrum (x<50), -1 wenn rechts.
+// Rolle → Zone (wo darf sich der Spieler bewegen) und
+// Aufgabe → Bewegungspfad (wie sieht die Laufbewegung aus) sind zwei
+// getrennte, unabhängig kombinierbare Zuordnungen. Koordinaten in %
+// relativ zum Pitch-Container (kein px), damit sie mit dem Tablet-Layout
+// mitskalieren. "side" = +1 wenn Position links vom Zentrum (x<50), -1 rechts.
 // ---------------------------------------------------------------------
 
 function getPositionGroup(label = "") {
   const l = label.toUpperCase();
   if (l === "TW") return "tw";
-  if (["LV", "RV", "IV", "IVL", "IVR", "IVM"].includes(l)) return "def";
-  if (["LM", "RM", "LWB", "RWB", "LF", "RF"].includes(l)) return "wide";
-  if (["ZM", "ZML", "ZMR", "ZM1", "ZM2", "ZDM", "ZDML", "ZDMR", "DM", "DML", "DMR", "OM", "ZAM"].includes(l)) return "mid";
-  if (["ST", "STL", "STR"].includes(l)) return "st";
-  return "mid";
+  if (["LV", "RV"].includes(l)) return "av";
+  if (["IV", "IVL", "IVR", "IVM"].includes(l)) return "iv";
+  if (["LM", "RM", "LWB", "RWB", "LF", "RF"].includes(l)) return "fluegel";
+  if (["OM", "ZAM"].includes(l)) return "om";
+  if (["ZM", "ZML", "ZMR", "ZM1", "ZM2"].includes(l)) return "zm";
+  if (["ZDM", "ZDML", "ZDMR", "DM", "DML", "DMR"].includes(l)) return "zdm";
+  if (["ST", "STL", "STR"].includes(l)) return "sturm";
+  return "zm";
 }
 
-function buildRoles(side) {
+// === A) Rolle → Zone ===================================================
+// group = Positionsgruppe (siehe getPositionGroup). zone = Rechteck in %,
+// für die linke Feldseite definiert, wird bei side === -1 an x=50 gespiegelt.
+// Neue Rolle ergänzen: einfach neuen Eintrag hinzufügen, nichts anfassen.
+const ROLE_ZONES = {
+  // --- Sturm ---
+  stossstuermer: {
+    label: "Stoßstürmer",
+    group: "sturm",
+    zone: { xMin: 32, xMax: 68, yMin: 2, yMax: 33 }, // Zentrum, Angriffsdrittel
+  },
+  zielspieler: {
+    label: "Zielspieler",
+    group: "sturm",
+    zone: { xMin: 30, xMax: 70, yMin: 12, yMax: 32 }, // OM-Bereich, Rückraum 16er
+  },
+
+  // --- Flügel ---
+  fluegelstuermer: {
+    label: "Flügelstürmer",
+    group: "fluegel",
+    zone: { xMin: 3, xMax: 20, yMin: 15, yMax: 80 }, // Außenbahn
+  },
+  inverser_fluegelstuermer: {
+    label: "Inverser Flügelstürmer",
+    group: "fluegel",
+    zone: { xMin: 15, xMax: 35, yMin: 12, yMax: 35 }, // Halbraum, Außenkante 16er
+  },
+
+  // --- Zentrum ---
+  om: {
+    label: "OM",
+    group: "om",
+    zone: { xMin: 30, xMax: 70, yMin: 20, yMax: 40 }, // vor dem 16er, 16er-Kante
+  },
+  zm: {
+    label: "ZM",
+    group: "zm",
+    zone: { xMin: 25, xMax: 75, yMin: 35, yMax: 65 }, // komplettes Zentrum
+  },
+  zdm: {
+    label: "ZDM",
+    group: "zdm",
+    zone: { xMin: 30, xMax: 70, yMin: 55, yMax: 70 }, // vor der Abwehr
+  },
+
+  // --- Verteidigung ---
+  av: {
+    label: "Außenverteidiger",
+    group: "av",
+    zone: { xMin: 2, xMax: 22, yMin: 45, yMax: 85 }, // Außenbahn bis Mittelfeldlinie
+  },
+  iv: {
+    label: "Innenverteidiger",
+    group: "iv",
+    zone: { xMin: 30, xMax: 70, yMin: 65, yMax: 88 }, // Zentrum, Verteidigungsdrittel
+  },
+
+  // --- Torwart ---
+  linientorwart: {
+    label: "Linientorwart",
+    group: "tw",
+    zone: { xMin: 35, xMax: 65, yMin: 85, yMax: 98 }, // 16er, torraumnah
+  },
+  ballspielender_torwart: {
+    label: "Ballspielender Torwart",
+    group: "tw",
+    zone: { xMin: 25, xMax: 75, yMin: 70, yMax: 98 }, // 16er + erweiterte Aufbauzone
+  },
+};
+
+function mirrorZone(zone, side) {
+  if (side === 1) return zone;
+  return { xMin: 100 - zone.xMax, xMax: 100 - zone.xMin, yMin: zone.yMin, yMax: zone.yMax };
+}
+
+// === B) Aufgabe → Bewegungspfad ========================================
+// role = welche Rolle bietet diese Aufgabe an (reine UI-Zugehörigkeit,
+// bestimmt NICHT die Zone). path = Wegpunkte in %-Offset von der Start-
+// position, nacheinander abgefahren. mirror: true → alle dx-Werte des
+// Pfads werden mit "side" multipliziert. Nach dem letzten Wegpunkt hält
+// die Figur ~1s (siehe buildRunAnimation), dann Sprung zurück zum Start.
+// Neue Aufgabe ergänzen: einfach neuen Eintrag hinzufügen, nichts anfassen.
+// icon = Identifier eines lucide-react Icons (Auflösung erfolgt in Pitch.jsx),
+// abbr = 4-6 Zeichen Kürzel fürs Aufgaben-Overlay auf dem Spielfeld.
+export const TASK_MOVEMENTS = {
+  // --- Stoßstürmer ---
+  stossstuermer_tiefenlauf: {
+    label: "Tiefenlauf", role: "stossstuermer", mirror: false,
+    icon: "ArrowUp", abbr: "Tief",
+    path: [{ dx: 0, dy: -40 }], // läuft bis zur gegnerischen Grundlinie durch (Clamp stoppt am Feldrand)
+  },
+  stossstuermer_ausweichen: {
+    label: "Ausweichen", role: "stossstuermer", mirror: false,
+    icon: "ArrowLeftRight", abbr: "Ausw",
+    path: [{ dx: -18, dy: -3 }, { dx: 18, dy: -3 }, { dx: 0, dy: 0 }], // Pendel, endet mittig
+  },
+
+  // --- Zielspieler ---
+  zielspieler_festmachen: {
+    label: "Festmachen", role: "zielspieler", mirror: false,
+    icon: "Anchor", abbr: "Fest",
+    path: [{ dx: 0, dy: 12 }],
+  },
+  zielspieler_lauern: {
+    label: "Lauern", role: "zielspieler", mirror: false,
+    icon: "Eye", abbr: "Lauer",
+    path: [{ dx: -12, dy: 3 }, { dx: 12, dy: 3 }, { dx: 0, dy: 3 }], // Pendel an der 16er-Kante
+  },
+
+  // --- Flügelstürmer ---
+  fluegelstuermer_breit: {
+    label: "Breit machen", role: "fluegelstuermer", mirror: true,
+    icon: "Expand", abbr: "Breit",
+    path: [
+      { dx: -14, dy: 0 },   // zur Außenlinie
+      { dx: -14, dy: -12 }, // Dribbling-Welle entlang der Linie
+      { dx: -11, dy: -24 },
+      { dx: -14, dy: -36 },
+    ],
+  },
+  fluegelstuermer_flanke: {
+    label: "Flanke", role: "fluegelstuermer", mirror: true,
+    icon: "Send", abbr: "Flanke",
+    path: [{ dx: 0, dy: -90 }, { dx: 10, dy: -90 }], // läuft bis zur Grundlinie durch, dann Ausholimpuls nach innen
+  },
+
+  // --- Inverser Flügelstürmer ---
+  inverser_einruecken: {
+    label: "Einrücken", role: "inverser_fluegelstuermer", mirror: true,
+    icon: "GitMerge", abbr: "Einr",
+    path: [{ dx: 22, dy: -14 }], // diagonal ins Zentrum, Höhe erstes Drittel (nicht in den Strafraum)
+  },
+
+  // --- OM ---
+  om_verteilen: {
+    label: "Verteilen", role: "om", mirror: false,
+    icon: "Share2", abbr: "Vert",
+    path: [{ dx: -16, dy: 0 }, { dx: 16, dy: 0 }, { dx: 0, dy: 0 }], // Pendel vor dem 16er
+  },
+  om_abschluss: {
+    label: "Abschluss", role: "om", mirror: false,
+    icon: "Target", abbr: "Absch",
+    path: [{ dx: 0, dy: -16 }],
+  },
+
+  // --- ZM ---
+  zm_spielverteilung: {
+    label: "Spielverteilung", role: "zm", mirror: false,
+    icon: "Network", abbr: "SpVer",
+    path: [{ dx: -16, dy: 0 }, { dx: 16, dy: 0 }, { dx: 0, dy: 0 }],
+  },
+  zm_nachruecken: {
+    label: "Nachrücken", role: "zm", mirror: false,
+    icon: "ArrowUpRight", abbr: "Nachr",
+    path: [{ dx: 0, dy: -16 }],
+  },
+  zm_pressing: {
+    label: "Pressing", role: "zm", mirror: false,
+    icon: "Flame", abbr: "Press",
+    path: [{ dx: 0, dy: -18 }, { dx: 0, dy: 0 }], // vor zum Gegner, danach zurück in die Zone
+  },
+
+  // --- ZDM ---
+  zdm_aufbauen: {
+    label: "Aufbauen", role: "zdm", mirror: false,
+    icon: "Layers", abbr: "Aufb",
+    path: [{ dx: -14, dy: 8 }, { dx: 14, dy: 8 }, { dx: 0, dy: 8 }], // diagonales Pendel
+  },
+  zdm_absichern: {
+    label: "Absichern", role: "zdm", mirror: false,
+    icon: "Shield", abbr: "Absi",
+    path: [{ dx: -14, dy: 0 }, { dx: 14, dy: 0 }, { dx: 0, dy: 0 }],
+  },
+
+  // --- Außenverteidiger ---
+  av_ueberlaufen: {
+    label: "Überlaufen", role: "av", mirror: true,
+    icon: "ChevronsUp", abbr: "Überl",
+    path: [{ dx: -4, dy: -38 }], // zieht am Flügelspieler vorbei, bis zur Grundlinie
+  },
+  av_absichern: {
+    label: "Absichern Außen", role: "av", mirror: true,
+    icon: "Shield", abbr: "AbsiA",
+    path: [{ dx: 8, dy: 10 }],
+  },
+
+  // --- Innenverteidiger ---
+  iv_aufbauen: {
+    label: "Aufbauen", role: "iv", mirror: true,
+    icon: "Layers", abbr: "Aufb",
+    path: [{ dx: -12, dy: -8 }],
+  },
+  iv_verteidigen: {
+    label: "Verteidigen", role: "iv", mirror: false,
+    icon: "Shield", abbr: "Vertd",
+    path: [{ dx: 0, dy: -15 }],
+  },
+  iv_kompakt: {
+    label: "Kompakt halten", role: "iv", mirror: false,
+    icon: "Minimize2", abbr: "Komp",
+    path: [{ dx: -6, dy: 0 }, { dx: 6, dy: 0 }, { dx: 0, dy: 0 }], // minimale Amplitude
+  },
+
+  // --- Torwart (unverändert) ---
+  linientorwart_absichern: {
+    label: "Absichern Linie", role: "linientorwart", mirror: false,
+    icon: "Shield", abbr: "Absi",
+    path: [{ dx: 0, dy: 3 }],
+  },
+  ballspielender_verteilen: {
+    label: "Verteilen", role: "ballspielender_torwart", mirror: false,
+    icon: "Send", abbr: "Vert",
+    path: [{ dx: 0, dy: -15 }],
+  },
+};
+
+// === Generische Bewegungs-Engine =======================================
+// Berechnet aus path.length die Keyframe-Zeitpunkte, sodass die Halte-
+// Zeit an der Endposition IMMER ~HOLD_SECONDS beträgt, egal wie viele
+// Wegpunkte eine Aufgabe hat. Kein Sonderfall-Code pro Rolle/Aufgabe.
+const PER_LEG_SECONDS = 0.7;
+const HOLD_SECONDS = 1;
+const HOLD_STOP_PCT = 99.5; // kurz vor 100%, damit der Rücksprung zum Start fast unsichtbar bleibt
+
+function buildRunAnimation(path, side, mirror, startX, startY) {
+  const legs = path.length;
+  const totalDuration = legs * PER_LEG_SECONDS + HOLD_SECONDS;
+  const clamp = (v) => Math.max(0, Math.min(100, v)); // Spieler darf den sichtbaren Feldbereich nie verlassen
+
+  const points = [
+    { x: startX, y: startY },
+    ...path.map((p) => ({
+      x: clamp(startX + (mirror ? p.dx * side : p.dx)),
+      y: clamp(startY + p.dy),
+    })),
+  ];
+
+  const vars = {};
+  points.forEach((pt, i) => {
+    vars[`--p${i}-x`] = `${pt.x}%`;
+    vars[`--p${i}-y`] = `${pt.y}%`;
+  });
+
+  const lastIndex = points.length - 1;
+  const lines = points.map((_, i) => {
+    const pct = ((i * PER_LEG_SECONDS) / totalDuration) * 100;
+    return `${pct.toFixed(2)}% { left: var(--p${i}-x); top: var(--p${i}-y); }`;
+  });
+  lines.push(`${HOLD_STOP_PCT}% { left: var(--p${lastIndex}-x); top: var(--p${lastIndex}-y); }`);
+  lines.push(`100% { left: var(--p0-x); top: var(--p0-y); }`);
+
   return {
-    tw: [
-      {
-        key: "aufbau",
-        label: "Mitspielen / Aufbau",
-        dx: 0, dy: -55,
-        keywords: [
-          "Bleib anspielbar",
-          "Spiel schnell weiter",
-          "Steh hoch hinter der Kette",
-          "Ruhe am Ball",
-          "Such den freien Mann",
-        ],
-      },
-      {
-        key: "linie",
-        label: "Linie halten",
-        dx: 0, dy: 18,
-        keywords: [
-          "Bleib auf der Linie",
-          "Organisier die Abwehr",
-          "Komm bei Flanken raus",
-          "Gib Kommandos",
-          "Konzentration bei langen Bällen",
-        ],
-      },
-    ],
-    def: [
-      {
-        key: "aufbauen",
-        label: "Mit aufbauen",
-        dx: 0, dy: -70,
-        keywords: [
-          "Trag den Ball nach vorne",
-          "Such den vertikalen Pass",
-          "Bleib ruhig im Aufbau",
-          "Öffne die Seite",
-          "Biete dich kurz an",
-        ],
-      },
-      {
-        key: "rausruecken",
-        label: "Rausrücken / Pressing",
-        dx: side * 35, dy: -55,
-        keywords: [
-          "Steig früh raus",
-          "Lass ihn nicht drehen",
-          "Attackier den ersten Kontakt",
-          "Schieb die Kette hoch",
-          "Sichere den Raum hinter dir ab",
-        ],
-      },
-    ],
-    wide: [
-      {
-        key: "fluegelspieler",
-        label: "Flügelspieler",
-        dx: 0, dy: -75,
-        keywords: [
-          "Bleib breit an der Linie",
-          "Mach die Tiefe – hinter die Kette",
-          "Sichere hinten ab bei Ballverlust",
-          "Such die Flanke",
-          "Gegenspieler eng stellen",
-          "Tempo über außen machen",
-        ],
-      },
-      {
-        key: "inverser",
-        label: "Inverser Flügelspieler",
-        dx: side * 65, dy: -55,
-        keywords: [
-          "Zieh in den Halbraum",
-          "Such den Abschluss",
-          "Verbinde dich mit dem Zehner",
-          "Lass den Außenverteidiger aufrücken",
-          "Spiel zwischen den Linien",
-          "Komm auf den zweiten Pfosten",
-        ],
-      },
-    ],
-    mid: [
-      {
-        key: "aufruecken",
-        label: "Aufrücken (Achter)",
-        dx: 0, dy: -80,
-        keywords: [
-          "Schieb in die Box nach",
-          "Zweite Welle",
-          "Such den Strafraum",
-          "Spiel und geh",
-          "Unterstütz den Stürmer",
-        ],
-      },
-      {
-        key: "absichern",
-        label: "Absichern (Sechser)",
-        dx: 0, dy: 55,
-        keywords: [
-          "Bleib vor der Abwehr",
-          "Sichere die Konter ab",
-          "Verteil die Bälle",
-          "Halt die Position",
-          "Wenig Risiko im Aufbau",
-        ],
-      },
-    ],
-    st: [
-      {
-        key: "stossstuermer",
-        label: "Stoßstürmer",
-        dx: 0, dy: -70,
-        keywords: [
-          "Lauf hinter die Kette",
-          "Biete dich für den Steilpass an",
-          "Zieh die Abwehr tief",
-          "Pass aufs Abseits auf",
-          "Sprint in die Tiefe bei Umschalten",
-        ],
-      },
-      {
-        key: "zielspieler",
-        label: "Zielspieler",
-        dx: 0, dy: 60,
-        keywords: [
-          "Mach die Bälle fest",
-          "Warte im Rückraum",
-          "Spiel als Wand ab",
-          "Bind die Innenverteidiger",
-          "Halt den Ball bis Unterstützung kommt",
-        ],
-      },
-    ],
+    vars,
+    css: `@keyframes brief-run-path { ${lines.join(" ")} }`,
+    totalDuration,
   };
 }
 
-export default function BriefingModal({ position, playerName, neighbors = [], onConfirm, onCancel }) {
+export default function BriefingModal({ position, playerName, neighbors = [], onConfirm, onCancel, title = "Wechsel-Briefing", confirmLabel = "Verstanden – Wechsel!", initialRoleKey = null, initialTaskKey = null }) {
   const [roleKey, setRoleKey] = useState(null);
-  const [selected, setSelected] = useState([]);
+  const [taskKey, setTaskKey] = useState(null);
 
   const x = position?.x ?? 50;
   const y = position?.y ?? 50;
   const side = x < 50 ? 1 : -1; // links (1) → Bewegung "innen" geht nach rechts, rechts (-1) → nach links
 
   const group = getPositionGroup(position?.label);
-  const roles = buildRoles(side)[group] || buildRoles(side).mid;
+  const roleOptions = Object.entries(ROLE_ZONES)
+    .filter(([, r]) => r.group === group)
+    .map(([key, r]) => ({ key, ...r }));
 
-  // Beim Öffnen / Positionswechsel: erste Rolle vorauswählen
+  // Beim Öffnen / Positionswechsel: vorherige Rolle+Aufgabe des Spielers vorbefüllen
+  // (falls vorhanden), sonst erste Rolle vorauswählen und Aufgabe zurücksetzen.
   useEffect(() => {
     if (position) {
-      setRoleKey(roles[0].key);
-      setSelected([]);
+      setRoleKey(initialRoleKey ?? roleOptions[0]?.key ?? null);
+      setTaskKey(initialTaskKey ?? null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [position?.id]);
 
   if (!position) return null;
 
-  const activeRole = roles.find((r) => r.key === roleKey) || roles[0];
+  const activeRole = ROLE_ZONES[roleKey];
+  const activeZone = activeRole ? mirrorZone(activeRole.zone, side) : null;
 
-  function toggleKeyword(kw) {
-    setSelected((prev) => {
-      if (prev.includes(kw)) return prev.filter((k) => k !== kw);
-      if (prev.length >= 3) return prev; // max 3
-      return [...prev, kw];
-    });
-  }
+  const taskOptions = Object.entries(TASK_MOVEMENTS)
+    .filter(([, t]) => t.role === roleKey)
+    .map(([key, t]) => ({ key, ...t }));
+
+  const activeTask = TASK_MOVEMENTS[taskKey];
+  const runAnimation = activeTask ? buildRunAnimation(activeTask.path, side, activeTask.mirror, x, y) : null;
+  const canConfirm = Boolean(roleKey && taskKey);
 
   function selectRole(key) {
     setRoleKey(key);
-    setSelected([]);
+    setTaskKey(null); // Aufgabe hängt von der Rolle ab -> zurücksetzen
+  }
+
+  function selectTask(key) {
+    setTaskKey(key);
+  }
+
+  function handleConfirm() {
+    const task = TASK_MOVEMENTS[taskKey];
+    onConfirm({
+      role: roleKey,
+      roleLabel: activeRole?.label,
+      aufgaben: taskKey ? [taskKey] : [],
+      aufgabenLabels: task ? [task.label] : [],
+    });
   }
 
   return (
@@ -377,7 +509,7 @@ export default function BriefingModal({ position, playerName, neighbors = [], on
         <div className="brief-card">
           <div className="brief-head">
             <div>
-              <div className="brief-head-title">Wechsel-Briefing</div>
+              <div className="brief-head-title">{title}</div>
               <div className="brief-head-sub">
                 {position.label}{playerName ? ` · ${playerName}` : ""}
               </div>
@@ -401,27 +533,49 @@ export default function BriefingModal({ position, playerName, neighbors = [], on
                   </div>
                 ))}
 
+                {/* Zone der gewählten Rolle */}
+                {activeZone && (
+                  <div
+                    className="brief-zone"
+                    style={{
+                      left: `${activeZone.xMin}%`,
+                      top: `${activeZone.yMin}%`,
+                      width: `${activeZone.xMax - activeZone.xMin}%`,
+                      height: `${activeZone.yMax - activeZone.yMin}%`,
+                    }}
+                  />
+                )}
+
                 {/* Geisterspur an Startposition */}
                 <div className="brief-ghost" style={{ left: `${x}%`, top: `${y}%` }} />
 
-                {/* Aktiver Spieler – animiert */}
-                <div className="brief-dot" style={{ left: `${x}%`, top: `${y}%` }}>
-                  <div
-                    className="brief-mover"
-                    style={{ "--dx": `${activeRole.dx}px`, "--dy": `${activeRole.dy}px` }}
-                  >
-                    <div className="brief-dot-circle">{position.number ?? position.label}</div>
-                    <div className="brief-dot-name">{playerName || position.label}</div>
-                  </div>
+                {/* Aktiver Spieler – animiert entlang der gewählten Aufgabe */}
+                <div
+                  key={taskKey || "idle"}
+                  className="brief-mover-pct"
+                  style={
+                    runAnimation
+                      ? {
+                          ...runAnimation.vars,
+                          animationName: "brief-run-path",
+                          animationDuration: `${runAnimation.totalDuration}s`,
+                        }
+                      : { left: `${x}%`, top: `${y}%` }
+                  }
+                >
+                  <div className="brief-dot-circle">{position.number ?? position.label}</div>
+                  <div className="brief-dot-name">{playerName || position.label}</div>
                 </div>
+                {runAnimation && <style>{runAnimation.css}</style>}
               </div>
-              <div className="brief-role-name">{activeRole.label}</div>
+              <div className="brief-role-name">{activeRole?.label || ""}</div>
             </div>
 
-            {/* RECHTS: Rolle + Schlagworte */}
+            {/* RECHTS: Rolle (bestimmt Zone) + Aufgabe (bestimmt Bewegung) */}
             <div>
+              <div className="brief-section-label">Rolle</div>
               <div className="brief-roles">
-                {roles.map((r) => (
+                {roleOptions.map((r) => (
                   <button
                     key={r.key}
                     className={`brief-role-btn ${roleKey === r.key ? "active" : ""}`}
@@ -432,24 +586,18 @@ export default function BriefingModal({ position, playerName, neighbors = [], on
                 ))}
               </div>
 
-              <div className="brief-section-label">Aufgaben (max. 3 wählen)</div>
-              <div className="brief-keywords">
-                {activeRole.keywords.map((kw) => {
-                  const isSelected = selected.includes(kw);
-                  const isDisabled = !isSelected && selected.length >= 3;
-                  return (
-                    <button
-                      key={kw}
-                      className={`brief-keyword ${isSelected ? "selected" : ""} ${isDisabled ? "disabled" : ""}`}
-                      onClick={() => toggleKeyword(kw)}
-                    >
-                      <span className="brief-keyword-check">{isSelected ? "✓" : ""}</span>
-                      {kw}
-                    </button>
-                  );
-                })}
+              <div className="brief-section-label">Aufgabe (Bewegung)</div>
+              <div className="brief-tasks">
+                {taskOptions.map((t) => (
+                  <button
+                    key={t.key}
+                    className={`brief-role-btn ${taskKey === t.key ? "active" : ""}`}
+                    onClick={() => selectTask(t.key)}
+                  >
+                    {t.label}
+                  </button>
+                ))}
               </div>
-              <div className="brief-counter">{selected.length} / 3 ausgewählt</div>
             </div>
           </div>
 
@@ -457,10 +605,10 @@ export default function BriefingModal({ position, playerName, neighbors = [], on
             <button className="brief-btn-cancel" onClick={onCancel}>Abbrechen</button>
             <button
               className="brief-btn-confirm"
-              disabled={selected.length === 0}
-              onClick={() => onConfirm({ role: activeRole.key, roleLabel: activeRole.label, keywords: selected, dx: activeRole.dx, dy: activeRole.dy })}
+              disabled={!canConfirm}
+              onClick={handleConfirm}
             >
-              Verstanden – Wechsel!
+              {confirmLabel}
             </button>
           </div>
         </div>

@@ -1,3 +1,5 @@
+import { ClipboardList } from "lucide-react";
+
 const S = `
   .mfbar {
     font-family: 'DM Sans', sans-serif;
@@ -38,9 +40,27 @@ const S = `
     color: #3f3f46;
     white-space: nowrap;
   }
+
+  .mfbar-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #111116;
+    border: 1px solid #1e1e24;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #a1a1aa;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .mfbar-toggle:hover { border-color: #3f3f46; }
+  .mfbar-toggle.active { border-color: #22c55e; background: #0d1f0e; color: #22c55e; }
 `;
 
-export default function MatchdayFormationBar({ lineups, selectedLineupId, onSelectLineup }) {
+export default function MatchdayFormationBar({ lineups, selectedLineupId, onSelectLineup, showTaskOverlay, onToggleTaskOverlay }) {
   const selectedLineup = lineups.find(l => l.id === selectedLineupId);
 
   return (
@@ -61,6 +81,15 @@ export default function MatchdayFormationBar({ lineups, selectedLineupId, onSele
         {selectedLineup && (
           <span className="mfbar-info">{selectedLineup.formation_name || ''}</span>
         )}
+        <button
+          type="button"
+          className={`mfbar-toggle ${showTaskOverlay ? "active" : ""}`}
+          onClick={onToggleTaskOverlay}
+          title="Aufgaben-Icons auf dem Feld ein-/ausblenden"
+        >
+          <ClipboardList size={14} />
+          Aufgaben
+        </button>
       </div>
     </>
   );

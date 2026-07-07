@@ -21,7 +21,14 @@ class LineupSlotSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LineupSlot
-        fields = ["id","position","position_detail","player","player_detail","instruction",]
+        fields = [
+            "id",
+            "position",
+            "position_detail",
+            "player",
+            "player_detail",
+            "instruction",
+        ]
 
 
 class LineupSubstituteSerializer(serializers.ModelSerializer):
@@ -37,7 +44,12 @@ class LineupSubstituteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LineupSubstitute
-        fields = ["id","player","player_detail","note",]
+        fields = [
+            "id",
+            "player",
+            "player_detail",
+            "note",
+        ]
 
 
 class LineupSerializer(serializers.ModelSerializer):
@@ -60,7 +72,18 @@ class LineupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Lineup
-        fields = ["id", "title","opponent","formation","formation_detail","general_notes","slots","substitutes","created_at","updated_at",]
+        fields = [
+            "id",
+            "title",
+            "opponent",
+            "formation",
+            "formation_detail",
+            "general_notes",
+            "slots",
+            "substitutes",
+            "created_at",
+            "updated_at",
+        ]
 
     def validate(self, data):
         """
@@ -70,14 +93,18 @@ class LineupSerializer(serializers.ModelSerializer):
         substitutes_data = data.get("substitutes", [])
 
         player_ids_in_slots = {slot_data["player"] for slot_data in slots_data}
-        player_ids_in_substitutes = {substitute_data["player"] for substitute_data in substitutes_data}
-        
+        player_ids_in_substitutes = {
+            substitute_data["player"] for substitute_data in substitutes_data
+        }
+
         if player_ids_in_slots & player_ids_in_substitutes:
             raise serializers.ValidationError(
-                "Ein Spieler kann nicht gleichzeitig in der Startelf und auf der Bank sein."
+                "Ein Spieler kann nicht gleichzeitig in der Startelf und auf "
+                "der Bank sein."
             )
-        
+
         return data
+
     def create(self, validated_data):
         """
         Erstellt eine neue Aufstellung inklusive Feldpositionen und Ersatzspielern.
@@ -139,7 +166,3 @@ class LineupSerializer(serializers.ModelSerializer):
             LineupSubstitute.objects.create(lineup=instance, **substitute_data)
 
         return instance
-    
-
-    
-        

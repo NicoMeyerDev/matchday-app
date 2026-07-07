@@ -1,8 +1,8 @@
 from rest_framework import serializers
-from formations.serializers import FormationSerializer  
 from lineups.serializers import LineupSerializer
 from players.serializers import PlayerSerializer
 from .models import MatchEvent, MatchReport
+
 
 class MatchEventSerializer(serializers.ModelSerializer):
     """
@@ -20,7 +20,19 @@ class MatchEventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MatchEvent
-        fields = ["id", "match_report", "minute", "event_type", "for_us", "card_type", "player", "player_detail", "description", "created_at"]
+        fields = [
+            "id",
+            "match_report",
+            "minute",
+            "event_type",
+            "for_us",
+            "card_type",
+            "player",
+            "player_detail",
+            "description",
+            "created_at",
+        ]
+
 
 class MatchReportSerializer(serializers.ModelSerializer):
     """
@@ -38,5 +50,14 @@ class MatchReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MatchReport
-        fields = ["id", "lineup", "lineup_detail", "opponent", "events",  "result", "notes", "created_at", "updated_at"]
-
+        fields = [
+            "id",
+            "lineup",
+            "lineup_detail",
+            "opponent",
+            "events",
+            "result",
+            "notes",
+            "created_at",
+            "updated_at",
+        ]
