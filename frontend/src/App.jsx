@@ -77,6 +77,10 @@ export default function App() {
 
   // Wechsel-Briefing (Matchday): aktuell angezeigtes Briefing oder null
   const [briefing, setBriefing] = useState(null);
+  // Bestätigte Briefings pro Position (Rolle + Aufgaben), Key = position.id
+  const [playerBriefings, setPlayerBriefings] = useState({});
+  // Aufgaben-Overlay (Matchday + Vorbereitung): zeigt Icon/Kürzel der zugewiesenen Aufgabe pro Spieler
+  const [showTaskOverlay, setShowTaskOverlay] = useState(false);
   // Referenz auf die MatchTimerBar, um Wechsel automatisch zu loggen
   const timerBarRef = useRef(null);
 
@@ -277,6 +281,41 @@ export default function App() {
   return Object.values(assignedSlots).some((slot) => slot.player === playerId);
   }
 
+  // Vorbereitung: öffnet das Rolle/Aufgabe-Modal nur bei echter Neuplatzierung
+  // (Spieler kommt aus Liste/Bank UND der Ziel-Slot war vorher leer). Beim
+  // Verschieben/Tauschen innerhalb der Aufstellung bleibt das Modal zu.
+  function handlePreparationSelectPlayer(player) {
+    const position = activePosition;
+    if (!position || !player) return;
+
+    const wasOnField = isPlayerOnField(player.id);
+    const wasSlotEmpty = !assignedSlots[position.id];
+
+    handleAssignPlayerToActivePosition(player);
+
+    if (wasOnField || !wasSlotEmpty) return;
+
+    setBriefing({
+      position,
+      player,
+      playerName: `#${player.shirt_number ?? "?"} ${player.name}`,
+      neighbors: getNeighbors(position),
+      mode: "assign",
+    });
+  }
+
+  // Vorbereitung: öffnet das Rolle/Aufgabe-Modal für einen bereits aufgestellten
+  // Spieler zum Anpassen (Klick auf die Spielerkarte). Nicht in Matchday genutzt.
+  function handleEditPlayerTask(position, player) {
+    setBriefing({
+      position,
+      player,
+      playerName: `#${player.shirt_number ?? "?"} ${player.name}`,
+      neighbors: getNeighbors(position),
+      mode: "assign",
+    });
+  }
+
   // Im Matchday: unterscheidet zwischen echtem Wechsel (Spieler kommt von der Bank)
   // und reinem Positionstausch (Spieler steht schon auf dem Feld) - nur ersteres
   // öffnet das Briefing-Modal und loggt ein Wechsel-Event.
@@ -371,6 +410,7 @@ function handleMatchdaySelectPlayer(player) {
   const neighbors = getNeighbors(position);
   setBriefing({
     position,
+    player,
     playerName: `#${player.shirt_number ?? "?"} ${player.name}`,
     neighbors,
   });
@@ -381,7 +421,11 @@ function handleMatchdaySelectPlayer(player) {
 }
 
   function handleClearPosition(positionId) {
+    const removedPlayerId = assignedSlots[positionId]?.player_detail?.id || assignedSlots[positionId]?.player;
     setAssignedSlots((s) => { const n = { ...s }; delete n[positionId]; return n; });
+    if (removedPlayerId != null) {
+      setPlayerBriefings((s) => { const n = { ...s }; delete n[removedPlayerId]; return n; });
+    }
   }
 
   function handleAddToBench(player) {
@@ -565,6 +609,8 @@ async function handleLogEvent(event) {
               onCreateLineup={handleCreateLineup}
               onUpdateLineup={handleUpdateLineup}
               onDeleteLineup={handleDeleteLineup}
+              showTaskOverlay={showTaskOverlay}
+              onToggleTaskOverlay={() => setShowTaskOverlay((s) => !s)}
               exportButton={<LineupExportButton formation={selectedFormation} assignedSlots={assignedSlots} club={club} lineupTitle={lineupTitle} opponent={opponent} />}
             />
             <div className={`workspace ${isPlayerDrawerOpen ? "drawer-open" : "drawer-closed"} ${isBenchOpen || isNotesOpen ? "right-open" : "right-closed"}`}>
@@ -572,15 +618,31 @@ async function handleLogEvent(event) {
                 <PlayerList players={players} selectedPlayerId={selectedPlayerId} isOpen={isPlayerDrawerOpen} assignedSlots={assignedSlots} substitutes={substitutes} onToggle={() => setIsPlayerDrawerOpen((s) => !s)} onSelectPlayer={setSelectedPlayerId} onAddToBench={handleAddToBench} onAddPlayer={() => setIsAddPlayerOpen(true)} />
               </div>
               <div className={mobileTab !== "feld" ? "mobile-hidden" : ""}>
-                <Pitch formation={selectedFormation} assignedSlots={assignedSlots} onOpenPositionPicker={setActivePosition} onClearPosition={handleClearPosition} />
+                <Pitch formation={selectedFormation} assignedSlots={assignedSlots} onOpenPositionPicker={setActivePosition} onClearPosition={handleClearPosition} playerBriefings={playerBriefings} showTaskOverlay={showTaskOverlay} onEditTask={handleEditPlayerTask} />
               </div>
               <aside className={`side-stack ${mobileTab !== "bank" ? "mobile-hidden" : ""}`}>
                 <Bench substitutes={substitutes} onRemoveFromBench={handleRemoveFromBench} isOpen={isBenchOpen} onToggle={() => setIsBenchOpen((s) => !s)} />
                 <NotesPanel notes={notes} onChangeNotes={setNotes} isOpen={isNotesOpen} onToggle={() => setIsNotesOpen((s) => !s)} />
               </aside>
             </div>
-            <PositionPlayerPicker position={activePosition} currentPlayer={currentPlayerForActivePosition} matchingPlayers={matchingPlayersForActivePosition} otherPlayers={otherPlayersForActivePosition} onClose={() => setActivePosition(null)} onSelectPlayer={handleAssignPlayerToActivePosition} onClearPosition={(id) => { handleClearPosition(id); setActivePosition(null); }} />
+            <PositionPlayerPicker position={activePosition} currentPlayer={currentPlayerForActivePosition} matchingPlayers={matchingPlayersForActivePosition} otherPlayers={otherPlayersForActivePosition} onClose={() => setActivePosition(null)} onSelectPlayer={handlePreparationSelectPlayer} onClearPosition={(id) => { handleClearPosition(id); setActivePosition(null); }} />
             {isAddPlayerOpen && <AddPlayerModal onClose={() => setIsAddPlayerOpen(false)} onPlayerCreated={(p) => setPlayers((s) => [...s, p])} />}
+            {briefing && (
+              <BriefingModal
+                position={briefing.position}
+                playerName={briefing.playerName}
+                neighbors={briefing.neighbors}
+                title={briefing.mode === "assign" ? "Rolle & Aufgabe zuweisen" : undefined}
+                confirmLabel={briefing.mode === "assign" ? "Übernehmen" : undefined}
+                initialRoleKey={playerBriefings[briefing.player?.id]?.role}
+                initialTaskKey={playerBriefings[briefing.player?.id]?.aufgaben?.[0]}
+                onConfirm={(result) => {
+                  setPlayerBriefings((s) => ({ ...s, [briefing.player.id]: result }));
+                  setBriefing(null);
+                }}
+                onCancel={() => setBriefing(null)}
+              />
+            )}
           </main>
         );
       case "matchday":
@@ -591,10 +653,11 @@ async function handleLogEvent(event) {
             <Header title="Matchday" selectedLineup={selectedLineup} user={user} onLogout={handleLogout} />
             <MatchTimerBar ref={timerBarRef} onEventsUpdate={(e) => setMatchEvents(e)} onMatchEnd={handleMatchEnd} onLogEvent={handleLogEvent} />
             <MatchdayFormationBar
-              lineups={lineups} selectedLineupId={selectedLineupId} onSelectLineup={handleSelectLineup} />
+              lineups={lineups} selectedLineupId={selectedLineupId} onSelectLineup={handleSelectLineup}
+              showTaskOverlay={showTaskOverlay} onToggleTaskOverlay={() => setShowTaskOverlay((s) => !s)} />
             <div className={`workspace no-drawer ${isBenchOpen || isNotesOpen ? "right-open" : "right-closed"}`}>
               <div className={mobileTab !== "feld" ? "mobile-hidden" : ""}>
-                <Pitch formation={selectedFormation} assignedSlots={assignedSlots} onOpenPositionPicker={setActivePosition} onClearPosition={handleClearPosition} />
+                <Pitch formation={selectedFormation} assignedSlots={assignedSlots} onOpenPositionPicker={setActivePosition} onClearPosition={handleClearPosition} playerBriefings={playerBriefings} showTaskOverlay={showTaskOverlay} />
               </div>
               <aside className={`side-stack ${mobileTab !== "bank" ? "mobile-hidden" : ""}`}>
                 <Bench substitutes={substitutes} onRemoveFromBench={handleRemoveFromBench} isOpen={isBenchOpen} onToggle={() => setIsBenchOpen((s) => !s)} />
@@ -607,7 +670,12 @@ async function handleLogEvent(event) {
                 position={briefing.position}
                 playerName={briefing.playerName}
                 neighbors={briefing.neighbors}
-                onConfirm={() => setBriefing(null)}
+                initialRoleKey={playerBriefings[briefing.player?.id]?.role}
+                initialTaskKey={playerBriefings[briefing.player?.id]?.aufgaben?.[0]}
+                onConfirm={(result) => {
+                  setPlayerBriefings((s) => ({ ...s, [briefing.player.id]: result }));
+                  setBriefing(null);
+                }}
                 onCancel={() => setBriefing(null)}
               />
             )}

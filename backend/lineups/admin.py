@@ -1,4 +1,5 @@
 """Admin-Konfiguration für Aufstellungen."""
+
 from django.contrib import admin
 from .models import Lineup, LineupSlot, LineupSubstitute
 
@@ -21,5 +22,5 @@ class LineupSubstituteInline(admin.TabularInline):
 class LineupAdmin(admin.ModelAdmin):
     """Zeigt Aufstellungsdaten mit Feldpositionen und Bankspielern im Admin an."""
 
-    list_display = ['title', 'opponent', 'formation', 'updated_at']
+    list_display = ["title", "opponent", "formation", "updated_at"]
     inlines = [LineupSlotInline, LineupSubstituteInline]

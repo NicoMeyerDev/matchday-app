@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ClipboardList } from "lucide-react";
 
 export default function FormationSelector({
   formations,
@@ -14,6 +15,8 @@ export default function FormationSelector({
   onUpdateLineup,
   onDeleteLineup,
   exportButton,
+  showTaskOverlay,
+  onToggleTaskOverlay,
 }) {
   const [isOpen, setIsOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -86,6 +89,15 @@ export default function FormationSelector({
               </div>
               <button type="button" className="primary-button" onClick={onCreateLineup} disabled={isSaving}>
                 Speichern
+              </button>
+              <button
+                type="button"
+                className={`task-overlay-toggle ${showTaskOverlay ? "active" : ""}`}
+                onClick={onToggleTaskOverlay}
+                title="Aufgaben-Icons auf dem Feld ein-/ausblenden"
+              >
+                <ClipboardList size={14} />
+                Aufgaben
               </button>
               {exportButton}
             </div>
