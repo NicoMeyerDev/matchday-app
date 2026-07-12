@@ -15,7 +15,7 @@ const S = `
   .section-label { font-size: 10px; letter-spacing: 0.18em; color: #22c55e; text-transform: uppercase; margin-bottom: 14px; font-weight: 500; }
 
   /* SCHNELLZUGRIFF */
-  .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
   .quick-tile { background: #0a0a0f; border: 1px solid #141418; border-radius: 12px; padding: 28px 14px; text-align: center; cursor: pointer; transition: border-color 0.2s, transform 0.15s; }
   .quick-tile:hover { transform: translateY(-2px); border-color: #22c55e; }
   .quick-tile.gray { opacity: 0.4; cursor: not-allowed; }
@@ -118,13 +118,10 @@ export default function Hub({ user, players, reports, onNavigate, onSelectPlayer
                 <span className="qt-icon">📊</span>
                 <div className="qt-label">Post-Match</div>
               </div>
-              {/* Analyse-Feature noch nicht fertig entwickelt - Kachel vorerst ausgeblendet.
-              <div className="quick-tile gray">
-                <span className="qt-icon">📈</span>
-                <div className="qt-label">Analyse</div>
-                <div className="qt-soon">Bald</div>
+              <div className="quick-tile purple" onClick={() => onNavigate("training")}>
+                <span className="qt-icon">🎯</span>
+                <div className="qt-label">Training</div>
               </div>
-              */}
             </div>
           </div>
 
