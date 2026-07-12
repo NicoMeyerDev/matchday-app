@@ -193,7 +193,8 @@ export default function Layout({ user, club, onLogout, currentPage, onNavigate, 
     { id: "matchday", icon: "🏟️", label: "Matchday" },
     { id: "postmatch", icon: "📊", label: "Post-Match" },
     { id: "training", icon: "🎯", label: "Training" },
-    { id: "analyse", icon: "📈", label: "Analyse", soon: true },
+    // Analyse-Feature noch nicht fertig entwickelt - vorerst aus der Navigation entfernt.
+    // { id: "analyse", icon: "📈", label: "Analyse", soon: true },
   ];
 
   return (
