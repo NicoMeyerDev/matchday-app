@@ -17,12 +17,27 @@ import Layout from "./components/Layout";
 import PlayersPage from "./pages/Players";
 import Onboarding from "./pages/Onboarding";
 import Verein from "./pages/Verein";
+import InviteAccept from "./pages/InviteAccept";
 import MatchTimerBar from "./components/MatchTimerBar";
 import MatchdayFormationBar from "./components/MatchdayFormationBar";
 import BriefingModal from "./components/BriefingModal";
 import LineupExportButton from "./components/LineupExportButton";
 import { useAutoDismiss } from "./hooks/useAutoDismiss";
 import TrainingsHub from "./pages/TrainingsHub";
+
+const INVITE_TOKEN_STORAGE_KEY = "pending_invite_token";
+
+// Liest den Einladungs-Token entweder aus der aktuellen URL (/invite/<token>)
+// oder - falls der Nutzer zwischendurch zum Login/Registrieren musste und die
+// Seite neu geladen wurde - aus dem Session-Storage.
+function getInitialInviteToken() {
+  const match = /^\/invite\/([^/]+)\/?$/.exec(window.location.pathname);
+  if (match) {
+    sessionStorage.setItem(INVITE_TOKEN_STORAGE_KEY, match[1]);
+    return match[1];
+  }
+  return sessionStorage.getItem(INVITE_TOKEN_STORAGE_KEY) || null;
+}
 
 function BackButton({ onClick }) {
   return (
@@ -62,7 +77,6 @@ export default function App() {
   const [activePosition, setActivePosition] = useState(null);
   const [isPlayerDrawerOpen, setIsPlayerDrawerOpen] = useState(true);
   const [isBenchOpen, setIsBenchOpen] = useState(true);
-  const [isNotesOpen, setIsNotesOpen] = useState(true);
   const [error, setError] = useAutoDismiss("", 5000);
   const [info, setInfo] = useAutoDismiss("", 4000);
   const [isLoading, setIsLoading] = useState(false);
@@ -75,6 +89,7 @@ export default function App() {
   const [matchEvents, setMatchEvents] = useState([]);
   const [hubPlayerTarget, setHubPlayerTarget] = useState(null);
   const [hubReportTarget, setHubReportTarget] = useState(null);
+  const [pendingInviteToken, setPendingInviteToken] = useState(getInitialInviteToken);
 
   // Wechsel-Briefing (Matchday): aktuell angezeigtes Briefing oder null
   const [briefing, setBriefing] = useState(null);
@@ -178,6 +193,20 @@ export default function App() {
       <Login
         onLoginSuccess={(userData) => setUser(userData)}
         onGoToRegister={() => setAuthPage("register")}
+      />
+    );
+  }
+
+  if (pendingInviteToken) {
+    return (
+      <InviteAccept
+        token={pendingInviteToken}
+        onDone={(acceptedClub) => {
+          sessionStorage.removeItem(INVITE_TOKEN_STORAGE_KEY);
+          window.history.replaceState(null, "", "/");
+          if (acceptedClub) setClub(acceptedClub);
+          setPendingInviteToken(null);
+        }}
       />
     );
   }
@@ -623,7 +652,7 @@ async function handleLogEvent(event) {
               onToggleTaskOverlay={() => setShowTaskOverlay((s) => !s)}
               exportButton={<LineupExportButton formation={selectedFormation} assignedSlots={assignedSlots} club={club} lineupTitle={lineupTitle} opponent={opponent} />}
             />
-            <div className={`workspace ${isPlayerDrawerOpen ? "drawer-open" : "drawer-closed"} ${isBenchOpen || isNotesOpen ? "right-open" : "right-closed"}`}>
+            <div className={`workspace ${isPlayerDrawerOpen ? "drawer-open" : "drawer-closed"} ${isBenchOpen ? "right-open" : "right-closed"}`}>
               <div className={mobileTab !== "spieler" ? "mobile-hidden" : ""}>
                 <PlayerList players={players} selectedPlayerId={selectedPlayerId} isOpen={isPlayerDrawerOpen} assignedSlots={assignedSlots} substitutes={substitutes} onToggle={() => setIsPlayerDrawerOpen((s) => !s)} onSelectPlayer={setSelectedPlayerId} onAddToBench={handleAddToBench} onAddPlayer={() => setIsAddPlayerOpen(true)} />
               </div>
@@ -632,7 +661,7 @@ async function handleLogEvent(event) {
               </div>
               <aside className={`side-stack ${mobileTab !== "bank" ? "mobile-hidden" : ""}`}>
                 <Bench substitutes={substitutes} onRemoveFromBench={handleRemoveFromBench} isOpen={isBenchOpen} onToggle={() => setIsBenchOpen((s) => !s)} />
-                <NotesPanel notes={notes} onChangeNotes={setNotes} isOpen={isNotesOpen} onToggle={() => setIsNotesOpen((s) => !s)} />
+                <NotesPanel notes={notes} onChangeNotes={setNotes} />
               </aside>
             </div>
             <PositionPlayerPicker position={activePosition} currentPlayer={currentPlayerForActivePosition} matchingPlayers={matchingPlayersForActivePosition} otherPlayers={otherPlayersForActivePosition} onClose={() => setActivePosition(null)} onSelectPlayer={handlePreparationSelectPlayer} onClearPosition={(id) => { handleClearPosition(id); setActivePosition(null); }} />
@@ -665,13 +694,13 @@ async function handleLogEvent(event) {
             <MatchdayFormationBar
               lineups={lineups} selectedLineupId={selectedLineupId} onSelectLineup={handleSelectLineup}
               showTaskOverlay={showTaskOverlay} onToggleTaskOverlay={() => setShowTaskOverlay((s) => !s)} />
-            <div className={`workspace no-drawer ${isBenchOpen || isNotesOpen ? "right-open" : "right-closed"}`}>
+            <div className={`workspace no-drawer ${isBenchOpen ? "right-open" : "right-closed"}`}>
               <div className={mobileTab !== "feld" ? "mobile-hidden" : ""}>
                 <Pitch formation={selectedFormation} assignedSlots={assignedSlots} onOpenPositionPicker={setActivePosition} onClearPosition={handleClearPosition} playerBriefings={playerBriefings} showTaskOverlay={showTaskOverlay} />
               </div>
               <aside className={`side-stack ${mobileTab !== "bank" ? "mobile-hidden" : ""}`}>
                 <Bench substitutes={substitutes} onRemoveFromBench={handleRemoveFromBench} isOpen={isBenchOpen} onToggle={() => setIsBenchOpen((s) => !s)} />
-                <NotesPanel notes={notes} onChangeNotes={setNotes} isOpen={isNotesOpen} onToggle={() => setIsNotesOpen((s) => !s)} />
+                <NotesPanel notes={notes} onChangeNotes={setNotes} />
               </aside>
             </div>
             <PositionPlayerPicker position={activePosition} currentPlayer={currentPlayerForActivePosition} matchingPlayers={matchingPlayersForActivePosition} otherPlayers={otherPlayersForActivePosition} onClose={() => setActivePosition(null)} onSelectPlayer={handleMatchdaySelectPlayer} onClearPosition={(id) => { handleClearPosition(id); setActivePosition(null); }} />

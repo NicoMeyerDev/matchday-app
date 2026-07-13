@@ -11,7 +11,7 @@ const S = `
   .verein-topbar .page-label { font-size: 11px; letter-spacing: 0.15em; color: #3f3f46; text-transform: uppercase; }
   .verein-topbar .page-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 0.05em; color: #fff; line-height: 1.1; }
 
-  .verein-card { background: #0a0a0f; border: 1px solid #141418; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; }
+  .verein-card { background: #0a0a0f; border: 1px solid #141418; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; max-width: 560px; }
   .verein-card h2 { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.05em; color: #e4e4e7; margin: 0 0 10px; }
   .verein-club-name { font-size: 22px; font-weight: 600; color: #22c55e; }
 

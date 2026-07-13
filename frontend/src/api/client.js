@@ -113,6 +113,12 @@ export function createClubInvite(email) {
   return request("/auth/club-invite/", { method: "POST", body: JSON.stringify({ email }) });
 }
 
+export function acceptClubInvite(token) {
+  return request(`/auth/accept-invite/${token}/`, { method: "POST" });
+}
+
+export function fetchClubs() { return request("/clubs/"); }
+
 // ── Training ──
 export function fetchTrainings() { return request("/training/trainings/"); }
 

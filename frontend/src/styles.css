@@ -153,31 +153,12 @@ textarea { width: 100%; min-height: 160px; resize: vertical; border: 1px solid #
   .bottom-stack { grid-template-columns: 1fr; }
 }
 
-/* Überarbeitete Steuerleiste: kompakter, einklappbar und ohne Titel-/Gegnerfelder. */
+/* Überarbeitete Steuerleiste: kompakt, ohne Titel-/Gegnerfelder. */
 .compact-control-panel {
   display: grid;
   grid-template-columns: 1fr; /* überschreibt die verwaiste 5-Spalten-Vorlage von .control-panel */
-  gap: 14px;
   padding: 16px;
   margin-bottom: 18px;
-}
-
-.control-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 14px;
-}
-
-.control-header h2 {
-  margin: 0 0 3px;
-  font-size: 20px;
-}
-
-.control-header p {
-  margin: 0;
-  color: #65766a;
-  font-size: 13px;
 }
 
 .control-content {
@@ -268,10 +249,16 @@ textarea { width: 100%; min-height: 160px; resize: vertical; border: 1px solid #
 .side-stack {
   grid-column: 3;
   display: grid;
-  gap: 18px;
+  /* Kleiner Abstand, damit Anweisung wie ein angehängter Fuß unter der Bank wirkt,
+     statt wie ein eigenständiges, danebenstehendes Element. */
+  gap: 6px;
   align-content: start;
   position: sticky;
   top: 18px;
+  /* Wie das Spielfeld begrenzt (siehe .pitch) - Inhalt (Bank + Anweisung-Bereich)
+     darf nie über die Feld-Darstellung hinausragen, sondern scrollt stattdessen. */
+  max-height: min(720px, 60vh);
+  overflow-y: auto;
 }
 
 .side-stack .bench-panel .side-drawer-content {
@@ -284,10 +271,6 @@ textarea { width: 100%; min-height: 160px; resize: vertical; border: 1px solid #
   overflow: visible;
 }
 
-.side-stack textarea {
-  min-height: 220px;
-}
-
 @media (max-width: 1400px) {
   .workspace.drawer-open { grid-template-columns: 300px minmax(560px, 1fr) 300px; }
   .workspace.drawer-closed { grid-template-columns: 58px minmax(760px, 1fr) 300px; }
@@ -297,23 +280,9 @@ textarea { width: 100%; min-height: 160px; resize: vertical; border: 1px solid #
   .control-content { grid-template-columns: 1fr; }
   .workspace.drawer-open, .workspace.drawer-closed { grid-template-columns: 1fr; }
   .player-drawer, .pitch-wrap, .side-stack { grid-column: 1; }
-  .side-stack { position: static; }
+  .side-stack { position: static; max-height: none; overflow: visible; }
 }
 
-
-/* Testlauf 3: Aufstellungsleiste klappt kompakt zu, bleibt aber beschriftet. */
-.compact-control-panel.closed {
-  padding: 10px 14px;
-}
-
-.compact-strip-header {
-  min-height: 38px;
-  align-items: center;
-}
-
-.compact-control-panel.closed .control-header h2 {
-  font-size: 18px;
-}
 
 /* Der Hinweis unter dem Spielfeld wurde entfernt. */
 .pitch-wrap {
