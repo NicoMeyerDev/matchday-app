@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('players', '0005_add_player_attributes'),
+        ("players", "0005_add_player_attributes"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='player',
-            name='attr_abschlag',
+            model_name="player",
+            name="attr_abschlag",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='player',
-            name='attr_reflexe',
+            model_name="player",
+            name="attr_reflexe",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
     ]

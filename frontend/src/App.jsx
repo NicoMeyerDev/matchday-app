@@ -16,6 +16,7 @@ import PostMatch from "./pages/PostMatch";
 import Layout from "./components/Layout";
 import PlayersPage from "./pages/Players";
 import Onboarding from "./pages/Onboarding";
+import Verein from "./pages/Verein";
 import MatchTimerBar from "./components/MatchTimerBar";
 import MatchdayFormationBar from "./components/MatchdayFormationBar";
 import BriefingModal from "./components/BriefingModal";
@@ -586,6 +587,15 @@ async function handleLogEvent(event) {
         return (
           <Layout user={user} club={club} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
             <TrainingsHub onBack={() => setCurrentPage("hub")} />
+          </Layout>
+        );
+      case "verein":
+        return (
+          <Layout user={user} club={club} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
+            <main className="app-shell">
+              <BackButton onClick={() => setCurrentPage("hub")} />
+              <Verein club={club} />
+            </main>
           </Layout>
         );
       case "preparation":

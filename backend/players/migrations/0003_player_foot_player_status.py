@@ -6,18 +6,31 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('players', '0002_player_club'),
+        ("players", "0002_player_club"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='player',
-            name='foot',
-            field=models.CharField(blank=True, choices=[('left', 'Links'), ('right', 'Rechts'), ('both', 'Beidfüßig')], max_length=10),
+            model_name="player",
+            name="foot",
+            field=models.CharField(
+                blank=True,
+                choices=[("left", "Links"), ("right", "Rechts"), ("both", "Beidfüßig")],
+                max_length=10,
+            ),
         ),
         migrations.AddField(
-            model_name='player',
-            name='status',
-            field=models.CharField(blank=True, choices=[('available', 'Verfügbar'), ('injured', 'Verletzt'), ('suspended', 'Gesperrt')], default='available', max_length=20),
+            model_name="player",
+            name="status",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("available", "Verfügbar"),
+                    ("injured", "Verletzt"),
+                    ("suspended", "Gesperrt"),
+                ],
+                default="available",
+                max_length=20,
+            ),
         ),
     ]

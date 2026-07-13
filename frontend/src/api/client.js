@@ -108,6 +108,11 @@ export function createMatchEvent(payload) {
 // ── Auth ──
 export function fetchCurrentUser() { return request("/auth/current-user/"); }
 
+// ── Club-Einladung ──
+export function createClubInvite(email) {
+  return request("/auth/club-invite/", { method: "POST", body: JSON.stringify({ email }) });
+}
+
 // ── Training ──
 export function fetchTrainings() { return request("/training/trainings/"); }
 

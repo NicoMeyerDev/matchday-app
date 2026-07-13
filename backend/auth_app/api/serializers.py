@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from auth_app.models import Clubinvite
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -33,3 +34,21 @@ class RegistrationSerializer(serializers.ModelSerializer):
         account.set_password(pw)
         account.save()
         return account
+
+
+class ClubinviteSerializer(serializers.ModelSerializer):
+    """Serializer for the Clubinvite model, used for managing club invitations."""
+
+    class Meta:
+        model = Clubinvite
+        fields = [
+            "id",
+            "club",
+            "email",
+            "token",
+            "invited_at",
+            "is_used",
+            "used_at",
+            "expires_at",
+        ]
+        read_only_fields = ["id", "club", "token", "invited_at", "is_used", "used_at"]

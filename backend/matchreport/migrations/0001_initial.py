@@ -9,20 +9,33 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('lineups', '0001_initial'),
+        ("lineups", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='MatchReport',
+            name="MatchReport",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('opponent', models.CharField(blank=True, max_length=120)),
-                ('result', models.CharField(blank=True, max_length=20)),
-                ('notes', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('lineup', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='lineups.lineup')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("opponent", models.CharField(blank=True, max_length=120)),
+                ("result", models.CharField(blank=True, max_length=20)),
+                ("notes", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "lineup",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="lineups.lineup"
+                    ),
+                ),
             ],
         ),
     ]

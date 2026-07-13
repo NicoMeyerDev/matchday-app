@@ -69,7 +69,17 @@ const S = `
     display: flex;
     align-items: center;
     gap: 10px;
+    border-left: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s;
   }
+  .sidebar-club:hover { background: #111116; }
+  .sidebar-club.active { background: #0d1f0e; }
+  .sidebar-club.active .club-name { color: #22c55e; }
 
   .club-badge {
     width: 34px;
@@ -211,12 +221,16 @@ export default function Layout({ user, club, onLogout, currentPage, onNavigate, 
             <div className="app-sub">Coaching Platform</div>
           </div>
 
-          <div className="sidebar-club">
+          <button
+            className={`sidebar-club ${currentPage === "verein" ? "active" : ""}`}
+            onClick={() => onNavigate("verein")}
+            title="Mein Verein"
+          >
             <div className="club-badge">⚽</div>
             <div className="hide-on-collapse">
               <div className="club-name">{club?.name || "Mein Verein"}</div>
             </div>
-          </div>
+          </button>
 
           <nav className="nav">
             {navItems.map((item) => (

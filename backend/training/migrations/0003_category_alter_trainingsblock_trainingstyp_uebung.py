@@ -7,34 +7,72 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('clubs', '0001_initial'),
-        ('training', '0002_alter_trainingsblock_end_time_and_more'),
+        ("clubs", "0001_initial"),
+        ("training", "0002_alter_trainingsblock_end_time_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Category',
+            name="Category",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=50, unique=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=50, unique=True)),
             ],
         ),
         migrations.AlterField(
-            model_name='trainingsblock',
-            name='trainingstyp',
-            field=models.CharField(blank=True, choices=[('aktivierung', 'Aktivierung/Erwärmung'), ('spielform_1', 'Spielform_1'), ('zwischenblock', 'Zwischenblock'), ('spielform_2', 'Spielform_2'), ('frei', 'Freier Block')], max_length=20),
+            model_name="trainingsblock",
+            name="trainingstyp",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("aktivierung", "Aktivierung/Erwärmung"),
+                    ("spielform_1", "Spielform_1"),
+                    ("zwischenblock", "Zwischenblock"),
+                    ("spielform_2", "Spielform_2"),
+                    ("frei", "Freier Block"),
+                ],
+                max_length=20,
+            ),
         ),
         migrations.CreateModel(
-            name='Uebung',
+            name="Uebung",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=120)),
-                ('description', models.TextField(blank=True)),
-                ('duration', models.PositiveIntegerField(help_text='Dauer in Minuten')),
-                ('player_count', models.CharField(blank=True, max_length=20)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('categories', models.ManyToManyField(blank=True, related_name='uebungen', to='training.category')),
-                ('club', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='uebungen', to='clubs.club')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=120)),
+                ("description", models.TextField(blank=True)),
+                ("duration", models.PositiveIntegerField(help_text="Dauer in Minuten")),
+                ("player_count", models.CharField(blank=True, max_length=20)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "categories",
+                    models.ManyToManyField(
+                        blank=True, related_name="uebungen", to="training.category"
+                    ),
+                ),
+                (
+                    "club",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="uebungen",
+                        to="clubs.club",
+                    ),
+                ),
             ],
         ),
     ]

@@ -1,4 +1,6 @@
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+from django.conf import settings
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -6,7 +8,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .serializers import RegistrationSerializer
+from auth_app.models import Clubinvite
+
+from .serializers import RegistrationSerializer, ClubinviteSerializer
 
 
 class RegistrationView(APIView):
@@ -136,3 +140,70 @@ class CurrentUserView(APIView):
         user = request.user
         data = {"id": user.id, "username": user.username, "email": user.email}
         return Response(data)
+
+
+class ClubInviteView(APIView):
+    """
+    Allows users to invite others to join a club.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ClubInviteSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(
+                club=request.user.club,
+                expires_at=timezone.now() + timezone.timedelta(days=1),
+            )
+            return Response(
+                {
+                    **serializer.data,
+                    "invite_link": f"{settings.FRONTEND_URL}/invite/{serializer.data['token']}",
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AcceptClubInviteView(APIView):
+    """
+    Allows users to accept an invitation to join a club using a unique token.
+
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, token):
+        try:
+            invite = Clubinvite.objects.get(token=token)
+        except Clubinvite.DoesNotExist:
+            return Response(
+                {"detail": "Invalid invitation token."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if invite.is_used:
+            return Response(
+                {"detail": "This invitation has already been used."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if invite.expires_at and timezone.now() > invite.expires_at:
+            return Response(
+                {"detail": "This invitation has expired."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Mark the invite as used
+        invite.is_used = True
+        invite.used_at = timezone.now()
+        invite.save()
+
+        # Assign the user to the club associated with the invite
+        invite.club.members.add(request.user)
+
+        return Response(
+            {"detail": "Invitation accepted successfully!"}, status=status.HTTP_200_OK
+        )
