@@ -61,20 +61,38 @@ export function playerMatchesPosition(player, positionLabel) {
 }
 
 /**
+ * Baut aus Rolle + Aufgabe (BriefingModal-Auswahl, siehe playerBriefings in App.jsx)
+ * einen maschinenlesbaren instruction-String (JSON mit roleKey + aufgaben-Keys).
+ * Labels werden bewusst NICHT mitgespeichert, sondern beim Laden live über
+ * parseInstructionText (BriefingModal.jsx) aus der Rolle/Aufgaben-Definitionsliste
+ * nachgeschlagen — so bleibt eine gespeicherte Aufstellung auch nach Label-
+ * Umbenennungen korrekt und roleKey/aufgaben-Keys lassen sich verlustfrei zurückgewinnen.
+ */
+function buildInstructionText(briefing) {
+  if (!briefing?.role) return "";
+  return JSON.stringify({ role: briefing.role, aufgaben: briefing.aufgaben || [] });
+}
+
+/**
  * Baut aus dem lokalen Frontend-Zustand einen Payload für spätere Speicherfunktionen.
  * Das Backend muss verschachtelte slots/substitutes akzeptieren, damit dieser Payload direkt speicherbar ist.
+ * playerBriefings (Key = Spieler-ID) liefert die im BriefingModal gewählte Rolle/Aufgabe,
+ * daraus wird der instruction-Text pro Slot abgeleitet.
  */
-export function buildLineupPayload({ title, opponent, formationId, assignedSlots, substitutes, generalNotes }) {
+export function buildLineupPayload({ title, opponent, formationId, assignedSlots, substitutes, generalNotes, playerBriefings = {} }) {
   return {
     title,
     opponent,
     formation: formationId,
     general_notes: generalNotes,
-    slots: Object.values(assignedSlots).map((slot) => ({
-      position: slot.position,
-      player: slot.player_detail?.id || slot.player,
-      instruction: slot.instruction || "",
-    })),
+    slots: Object.values(assignedSlots).map((slot) => {
+      const playerId = slot.player_detail?.id || slot.player;
+      return {
+        position: slot.position,
+        player: playerId,
+        instruction: buildInstructionText(playerBriefings[playerId]),
+      };
+    }),
     substitutes: substitutes.map((sub) => ({
       player: sub.player_detail?.id || sub.player || sub.id,
       note: sub.note || "",

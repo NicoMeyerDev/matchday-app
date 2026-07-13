@@ -20,7 +20,7 @@ import Verein from "./pages/Verein";
 import InviteAccept from "./pages/InviteAccept";
 import MatchTimerBar from "./components/MatchTimerBar";
 import MatchdayFormationBar from "./components/MatchdayFormationBar";
-import BriefingModal from "./components/BriefingModal";
+import BriefingModal, { parseInstructionText } from "./components/BriefingModal";
 import LineupExportButton from "./components/LineupExportButton";
 import { useAutoDismiss } from "./hooks/useAutoDismiss";
 import TrainingsHub from "./pages/TrainingsHub";
@@ -262,6 +262,16 @@ export default function App() {
     setNotes(lineup.general_notes || "");
     setLineupTitle(lineup.title || "MVP Testspiel");
     setOpponent(lineup.opponent || "Gegner noch nicht eingetragen");
+
+    // Rolle/Aufgabe pro Spieler aus dem gespeicherten instruction-String zurückgewinnen,
+    // damit das BriefingModal beim erneuten Öffnen eines Slots wieder vorausgewählt ist.
+    const briefings = {};
+    (lineup.slots || []).forEach((slot) => {
+      const playerId = slot.player_detail?.id || slot.player;
+      const parsed = parseInstructionText(slot.instruction);
+      if (playerId && parsed) briefings[playerId] = parsed;
+    });
+    setPlayerBriefings(briefings);
   }
 
   function handleSelectFormation(formationId) {
@@ -472,7 +482,7 @@ function handleMatchdaySelectPlayer(player) {
     if (!selectedFormationId) return;
     try {
       setIsSaving(true);
-      const payload = buildLineupPayload({ title: lineupTitle, opponent, formationId: selectedFormationId, assignedSlots, substitutes, generalNotes: notes });
+      const payload = buildLineupPayload({ title: lineupTitle, opponent, formationId: selectedFormationId, assignedSlots, substitutes, generalNotes: notes, playerBriefings });
       const created = await createLineup(payload);
       const fresh = await fetchLineups();
       setLineups(fresh);
@@ -485,7 +495,7 @@ function handleMatchdaySelectPlayer(player) {
     if (!selectedLineupId || !selectedFormationId) return;
     try {
       setIsSaving(true);
-      const payload = buildLineupPayload({ title: lineupTitle, opponent, formationId: selectedFormationId, assignedSlots, substitutes, generalNotes: notes });
+      const payload = buildLineupPayload({ title: lineupTitle, opponent, formationId: selectedFormationId, assignedSlots, substitutes, generalNotes: notes, playerBriefings });
       const updated = await updateLineup(selectedLineupId, payload);
       const fresh = await fetchLineups();
       setLineups(fresh);
