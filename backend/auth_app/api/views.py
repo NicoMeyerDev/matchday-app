@@ -142,7 +142,7 @@ class CurrentUserView(APIView):
         return Response(data)
 
 
-class ClubInviteView(APIView):
+class ClubinviteView(APIView):
     """
     Allows users to invite others to join a club.
     """
@@ -150,10 +150,19 @@ class ClubInviteView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = ClubInviteSerializer(data=request.data)
+        serializer = ClubinviteSerializer(data=request.data)
+
+        email = request.data.get("email")
+        club = request.user.clubs.first()
+
+        if Clubinvite.objects.filter(club=club, email=email).exists():
+            return Response(
+                {"detail": "An invitation has already been sent to this email."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if serializer.is_valid():
             serializer.save(
-                club=request.user.club,
+                club=request.user.clubs.first(),
                 expires_at=timezone.now() + timezone.timedelta(days=1),
             )
             return Response(

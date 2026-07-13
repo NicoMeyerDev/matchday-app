@@ -6,7 +6,7 @@ from auth_app.api.views import (
     CookieRefreshView,
     CookieDeleteView,
     CurrentUserView,
-    ClubInviteView,
+    ClubinviteView,
     AcceptClubInviteView,
 )
 
@@ -16,7 +16,7 @@ urlpatterns = [
     path("token/refresh/", CookieRefreshView.as_view(), name="token_refresh"),
     path("current-user/", CurrentUserView.as_view(), name="current_user"),
     path("logout/", CookieDeleteView.as_view(), name="logout"),
-    path("club-invite/", ClubInviteView.as_view(), name="club_invite"),
+    path("club-invite/", ClubinviteView.as_view(), name="club_invite"),
     path(
         "accept-invite/<uuid:token>/",
         AcceptClubInviteView.as_view(),

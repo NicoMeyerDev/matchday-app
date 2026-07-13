@@ -120,3 +120,6 @@ SIMPLE_JWT = {
 }
 
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', BASE_DIR / 'media')
+MEDIA_URL = '/media/'

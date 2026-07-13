@@ -10,6 +10,8 @@ from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 from matchreport.views import MatchEventViewSet
+from django.conf import settings
+from django.conf.urls.static import static
 
 event_router = DefaultRouter()
 event_router.register("matchreports/events", MatchEventViewSet, basename="matchevent")
@@ -24,7 +26,7 @@ urlpatterns = [
     path("api/matchreports/", include("matchreport.urls")),
     path("api/clubs/", include("clubs.urls")),
     path("api/training/", include("training.urls")),
-    # Catch-all: liefert die React-App für alle übrigen Pfade aus
-    # (muss als letztes stehen, sonst würden API-Routen verschluckt)
     re_path(r"^.*$", TemplateView.as_view(template_name="index.html")),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
