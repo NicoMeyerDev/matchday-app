@@ -1,5 +1,5 @@
 // Trainingshub: Kalender, Übungsdatenbank und Trainingsplanung
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   fetchTrainings, createTraining, updateTraining, deleteTraining,
   fetchTrainingBlocks, updateTrainingBlock, createTrainingBlock,
@@ -322,8 +322,40 @@ function UebungModal({ categories, onSave, onClose, onDelete = null, initialData
   const [selectedCategoryIds, setSelectedCategoryIds] = useState(
     initialData?.categories?.map(c => c.id) ?? []
   );
+  const [pictureFile, setPictureFile] = useState(null);
+  const [removePicture, setRemovePicture] = useState(false);
+  const [objectUrl, setObjectUrl] = useState(null);
+  const fileInputRef = useRef(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!pictureFile) { setObjectUrl(null); return; }
+    const url = URL.createObjectURL(pictureFile);
+    setObjectUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [pictureFile]);
+
+  const previewSrc = objectUrl || (!removePicture ? initialData?.pictures : null);
+
+  function handlePictureChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!["image/png", "image/jpeg"].includes(file.type)) {
+      setError("Bitte eine PNG- oder JPEG-Datei auswählen.");
+      e.target.value = "";
+      return;
+    }
+    setError("");
+    setPictureFile(file);
+    setRemovePicture(false);
+  }
+
+  function handleRemovePicture() {
+    setPictureFile(null);
+    setRemovePicture(true);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
 
   async function handleSubmit() {
     if (!name.trim()) { setError("Bitte einen Namen angeben."); return; }
@@ -332,13 +364,16 @@ function UebungModal({ categories, onSave, onClose, onDelete = null, initialData
     setIsSaving(true);
     setError("");
     try {
-      await onSave({
+      const payload = {
         name: name.trim(),
         description: description.trim(),
         duration: dur,
         player_count: playerCount.trim(),
         category_ids: selectedCategoryIds,
-      });
+      };
+      if (pictureFile) payload.pictureFile = pictureFile;
+      else if (removePicture) payload.pictures = null;
+      await onSave(payload);
     } catch (e) {
       setError(e.message);
       setIsSaving(false);
@@ -366,6 +401,29 @@ function UebungModal({ categories, onSave, onClose, onDelete = null, initialData
           <div>
             <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Beschreibung</div>
             <textarea style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }} rows={3} placeholder="Ablauf der Übung beschreiben…" value={description} onChange={e => setDescription(e.target.value)} />
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Aufbau-Bild</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {previewSrc ? (
+                <div style={{ width: 84, height: 84, borderRadius: 8, overflow: "hidden", border: `1px solid ${COLORS.borderLight}`, flexShrink: 0 }}>
+                  <img src={previewSrc} alt="Aufbau-Vorschau" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                </div>
+              ) : (
+                <div style={{ width: 84, height: 84, borderRadius: 8, border: `1px dashed ${COLORS.borderLight}`, display: "flex", alignItems: "center", justifyContent: "center", color: COLORS.textDim, fontSize: 11, textAlign: "center", flexShrink: 0 }}>Kein Bild</div>
+              )}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <button type="button" onClick={() => fileInputRef.current?.click()} style={{ background: COLORS.bg, border: `1px solid ${COLORS.borderLight}`, borderRadius: 8, padding: "8px 14px", color: COLORS.text, fontSize: 12, cursor: "pointer" }}>
+                  {previewSrc ? "Bild ändern" : "Bild auswählen"}
+                </button>
+                {previewSrc && (
+                  <button type="button" onClick={handleRemovePicture} style={{ background: "none", border: "none", color: COLORS.red, fontSize: 12, cursor: "pointer", padding: 0, textAlign: "left" }}>
+                    Bild entfernen
+                  </button>
+                )}
+                <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" onChange={handlePictureChange} style={{ display: "none" }} />
+              </div>
+            </div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>
@@ -751,7 +809,11 @@ export default function TrainingsHub({ onBack }) {
               onMouseEnter={e => { e.currentTarget.style.borderColor = "#22c55e44"; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; }}
             >
-              <UebungIllustration categoryName={u.categories?.[0]?.name} />
+              {u.pictures ? (
+                <img src={u.pictures} alt={u.name} style={{ width: "100%", height: 80, objectFit: "cover", display: "block" }} />
+              ) : (
+                <UebungIllustration categoryName={u.categories?.[0]?.name} />
+              )}
               <div style={{ padding: "10px 14px 14px", display: "flex", flexDirection: "column", flex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
                   <div style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.3, flex: 1, marginRight: 8 }}>{u.name}</div>
