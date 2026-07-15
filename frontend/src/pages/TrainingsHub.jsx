@@ -388,68 +388,66 @@ function UebungModal({ categories, onSave, onClose, onDelete = null, initialData
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200 }}>
-      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderLight}`, borderRadius: 16, padding: 26, width: "100%", maxWidth: 480, boxSizing: "border-box", margin: "0 16px" }}>
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderLight}`, borderRadius: 16, padding: 26, width: "min(820px, 96vw)", boxSizing: "border-box", margin: "0 16px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 800 }}>{isEdit ? "Übung bearbeiten" : "Übung anlegen"}</div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 20, lineHeight: 1 }}>✕</button>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div>
-            <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Name *</div>
-            <input autoFocus style={inputStyle} placeholder="z.B. Passstafette 4v2" value={name} onChange={e => setName(e.target.value)} />
-          </div>
-          <div>
-            <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Beschreibung</div>
-            <textarea style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }} rows={3} placeholder="Ablauf der Übung beschreiben…" value={description} onChange={e => setDescription(e.target.value)} />
-          </div>
-          <div>
-            <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Aufbau-Bild</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {previewSrc ? (
-                <div style={{ width: 84, height: 84, borderRadius: 8, overflow: "hidden", border: `1px solid ${COLORS.borderLight}`, flexShrink: 0 }}>
-                  <img src={previewSrc} alt="Aufbau-Vorschau" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        <div className="uebung-modal-grid">
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Name *</div>
+              <input autoFocus style={inputStyle} placeholder="z.B. Passstafette 4v2" value={name} onChange={e => setName(e.target.value)} />
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Beschreibung</div>
+              <textarea style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }} rows={3} placeholder="Ablauf der Übung beschreiben…" value={description} onChange={e => setDescription(e.target.value)} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Dauer (Minuten) *</div>
+                <input style={inputStyle} type="number" min="1" placeholder="z.B. 15" value={duration} onChange={e => setDuration(e.target.value)} />
+              </div>
+              <div>
+                <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Format / Spieler</div>
+                <input style={inputStyle} placeholder="z.B. 4v2" value={playerCount} onChange={e => setPlayerCount(e.target.value)} />
+              </div>
+            </div>
+            {categories.length > 0 && (
+              <div>
+                <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 8 }}>Kategorien</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {categories.map(c => {
+                    const sel = selectedCategoryIds.includes(c.id);
+                    return (
+                      <button key={c.id} onClick={() => toggleCategory(c.id)} style={{ background: sel ? COLORS.green : COLORS.bg, border: `1px solid ${sel ? COLORS.green : COLORS.borderLight}`, borderRadius: 20, padding: "6px 14px", color: sel ? "#fff" : COLORS.textMuted, cursor: "pointer", fontSize: 12, fontWeight: sel ? 600 : 400, transition: "background 0.1s, border-color 0.1s" }}>
+                        {c.name}
+                      </button>
+                    );
+                  })}
                 </div>
-              ) : (
-                <div style={{ width: 84, height: 84, borderRadius: 8, border: `1px dashed ${COLORS.borderLight}`, display: "flex", alignItems: "center", justifyContent: "center", color: COLORS.textDim, fontSize: 11, textAlign: "center", flexShrink: 0 }}>Kein Bild</div>
-              )}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <button type="button" onClick={() => fileInputRef.current?.click()} style={{ background: COLORS.bg, border: `1px solid ${COLORS.borderLight}`, borderRadius: 8, padding: "8px 14px", color: COLORS.text, fontSize: 12, cursor: "pointer" }}>
-                  {previewSrc ? "Bild ändern" : "Bild auswählen"}
-                </button>
-                {previewSrc && (
-                  <button type="button" onClick={handleRemovePicture} style={{ background: "none", border: "none", color: COLORS.red, fontSize: 12, cursor: "pointer", padding: 0, textAlign: "left" }}>
-                    Bild entfernen
-                  </button>
-                )}
-                <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" onChange={handlePictureChange} style={{ display: "none" }} />
               </div>
-            </div>
+            )}
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div>
-              <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Dauer (Minuten) *</div>
-              <input style={inputStyle} type="number" min="1" placeholder="z.B. 15" value={duration} onChange={e => setDuration(e.target.value)} />
-            </div>
-            <div>
-              <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 6 }}>Format / Spieler</div>
-              <input style={inputStyle} placeholder="z.B. 4v2" value={playerCount} onChange={e => setPlayerCount(e.target.value)} />
-            </div>
-          </div>
-          {categories.length > 0 && (
-            <div>
-              <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 8 }}>Kategorien</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {categories.map(c => {
-                  const sel = selectedCategoryIds.includes(c.id);
-                  return (
-                    <button key={c.id} onClick={() => toggleCategory(c.id)} style={{ background: sel ? COLORS.green : COLORS.bg, border: `1px solid ${sel ? COLORS.green : COLORS.borderLight}`, borderRadius: 20, padding: "6px 14px", color: sel ? "#fff" : COLORS.textMuted, cursor: "pointer", fontSize: 12, fontWeight: sel ? 600 : 400, transition: "background 0.1s, border-color 0.1s" }}>
-                      {c.name}
-                    </button>
-                  );
-                })}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, height: "100%" }}>
+            <div style={{ fontSize: 12, color: COLORS.textMuted }}>Aufbau-Bild</div>
+            {previewSrc ? (
+              <div style={{ flex: 1, minHeight: 260, width: "100%", borderRadius: 10, overflow: "hidden", border: `1px solid ${COLORS.borderLight}`, background: COLORS.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <img src={previewSrc} alt="Aufbau-Vorschau" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", display: "block" }} />
               </div>
-            </div>
-          )}
+            ) : (
+              <div style={{ flex: 1, minHeight: 260, width: "100%", borderRadius: 10, border: `1px dashed ${COLORS.borderLight}`, display: "flex", alignItems: "center", justifyContent: "center", color: COLORS.textDim, fontSize: 12, textAlign: "center" }}>Kein Bild</div>
+            )}
+            <button type="button" onClick={() => fileInputRef.current?.click()} style={{ background: COLORS.bg, border: `1px solid ${COLORS.borderLight}`, borderRadius: 8, padding: "9px 14px", color: COLORS.text, fontSize: 12, cursor: "pointer" }}>
+              {previewSrc ? "Bild ändern" : "Bild auswählen"}
+            </button>
+            {previewSrc && (
+              <button type="button" onClick={handleRemovePicture} style={{ background: "none", border: "none", color: COLORS.red, fontSize: 12, cursor: "pointer", padding: 0, textAlign: "left" }}>
+                Bild entfernen
+              </button>
+            )}
+            <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" onChange={handlePictureChange} style={{ display: "none" }} />
+          </div>
         </div>
         {error && <div style={{ background: COLORS.red + "22", border: `1px solid ${COLORS.red}44`, borderRadius: 8, padding: "10px 14px", marginTop: 14, color: COLORS.red, fontSize: 13 }}>{error}</div>}
         <div style={{ display: "flex", gap: 10, marginTop: 18 }}>

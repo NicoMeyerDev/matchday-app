@@ -26,7 +26,11 @@ urlpatterns = [
     path("api/matchreports/", include("matchreport.urls")),
     path("api/clubs/", include("clubs.urls")),
     path("api/training/", include("training.urls")),
-    re_path(r"^.*$", TemplateView.as_view(template_name="index.html")),
 ]
 
+# Muss vor der Catch-all-Route stehen, sonst fängt diese jede /media/-Anfrage ab.
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+urlpatterns += [
+    re_path(r"^.*$", TemplateView.as_view(template_name="index.html")),
+]

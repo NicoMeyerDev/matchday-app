@@ -462,6 +462,20 @@ textarea { width: 100%; min-height: 160px; resize: vertical; border: 1px solid #
   margin-top: 20px;
 }
 
+/* Zweispaltiges Layout für das Übung-Modal (Formular + Aufbau-Bild) */
+.uebung-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  align-items: stretch;
+}
+
+@media (max-width: 700px) {
+  .uebung-modal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .player-card.assigned {
   opacity: 0.5;
 }
