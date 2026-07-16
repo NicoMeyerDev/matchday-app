@@ -1,1 +1,274 @@
 Watching for file changes with StatReloader
+C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\core\urls.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\core\urls.py changed, reloading.
+Watching for file changes with StatReloader
+Not Found: /media/does-not-exist-probe.png
+[15/Jul/2026 17:15:17] "GET /media/does-not-exist-probe.png HTTP/1.1" 404 3924
+Bad Request: /api/auth/register/
+[15/Jul/2026 17:15:29] "POST /api/auth/register/ HTTP/1.1" 400 48
+Bad Request: /api/auth/login/
+[15/Jul/2026 17:15:32] "POST /api/auth/login/ HTTP/1.1" 400 37
+[15/Jul/2026 17:16:19] "POST /api/auth/register/ HTTP/1.1" 201 39
+[15/Jul/2026 17:16:22] "POST /api/auth/login/ HTTP/1.1" 200 357
+Internal Server Error: /api/training/uebungen/
+Traceback (most recent call last):
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+psycopg2.errors.NotNullViolation: null value in column "club_id" of relation "training_uebung" violates not-null constraint
+DETAIL:  Failing row contains (44, __LiveVerify__, , 10, 4v2, 2026-07-15 15:16:25.188236+00, null, uebungen/aufbau/live.png).
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 19, in create
+    self.perform_create(serializer)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\training\views.py", line 73, in perform_create
+    serializer.save(club=club)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\serializers.py", line 210, in save
+    self.instance = self.create(validated_data)
+                    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\serializers.py", line 1011, in create
+    instance = ModelClass._default_manager.create(**validated_data)
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\query.py", line 669, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\base.py", line 874, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\base.py", line 966, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\base.py", line 1169, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, insert_fields, returning_fields, raw
+    )
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\base.py", line 1220, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\query.py", line 1918, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1925, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+django.db.utils.IntegrityError: null value in column "club_id" of relation "training_uebung" violates not-null constraint
+DETAIL:  Failing row contains (44, __LiveVerify__, , 10, 4v2, 2026-07-15 15:16:25.188236+00, null, uebungen/aufbau/live.png).
+
+[15/Jul/2026 17:16:25] "POST /api/training/uebungen/ HTTP/1.1" 500 212767
+Bad Request: /api/auth/register/
+[15/Jul/2026 17:16:50] "POST /api/auth/register/ HTTP/1.1" 400 91
+[15/Jul/2026 17:16:54] "POST /api/auth/login/ HTTP/1.1" 200 357
+Internal Server Error: /api/training/uebungen/
+Traceback (most recent call last):
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+psycopg2.errors.NotNullViolation: null value in column "club_id" of relation "training_uebung" violates not-null constraint
+DETAIL:  Failing row contains (45, __LiveVerify__, , 10, 4v2, 2026-07-15 15:16:56.974589+00, null, uebungen/aufbau/live_uBHkqlC.png).
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\core\handlers\base.py", line 198, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\mixins.py", line 19, in create
+    self.perform_create(serializer)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\training\views.py", line 73, in perform_create
+    serializer.save(club=club)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\serializers.py", line 210, in save
+    self.instance = self.create(validated_data)
+                    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\rest_framework\serializers.py", line 1011, in create
+    instance = ModelClass._default_manager.create(**validated_data)
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\query.py", line 669, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\base.py", line 874, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\base.py", line 966, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\base.py", line 1169, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, insert_fields, returning_fields, raw
+    )
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\base.py", line 1220, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\query.py", line 1918, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1925, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\2025n\Desktop\Projekte Privat\trainer-app\backend\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+django.db.utils.IntegrityError: null value in column "club_id" of relation "training_uebung" violates not-null constraint
+DETAIL:  Failing row contains (45, __LiveVerify__, , 10, 4v2, 2026-07-15 15:16:56.974589+00, null, uebungen/aufbau/live_uBHkqlC.png).
+
+[15/Jul/2026 17:16:57] "POST /api/training/uebungen/ HTTP/1.1" 500 212903
+Bad Request: /api/auth/register/
+[15/Jul/2026 17:17:29] "POST /api/auth/register/ HTTP/1.1" 400 91
+[15/Jul/2026 17:17:32] "POST /api/auth/login/ HTTP/1.1" 200 357
+[15/Jul/2026 17:17:34] "POST /api/training/uebungen/ HTTP/1.1" 201 223
+[15/Jul/2026 17:17:36] "GET /media/uebungen/aufbau/live_DuPBvWL.png HTTP/1.1" 200 69
+[15/Jul/2026 17:17:40] "GET /api/training/trainings/ HTTP/1.1" 200 206
+[15/Jul/2026 17:17:40] "GET /api/training/categories/ HTTP/1.1" 200 228
+[15/Jul/2026 17:17:40] "GET /api/training/categories/ HTTP/1.1" 200 228
+[15/Jul/2026 17:17:41] "GET /api/training/uebungen/ HTTP/1.1" 200 7787
+[15/Jul/2026 17:17:41] "GET /api/training/trainings/ HTTP/1.1" 200 206
+[15/Jul/2026 17:17:42] "GET /api/training/uebungen/ HTTP/1.1" 200 7787
+[15/Jul/2026 17:17:55] "PATCH /api/training/uebungen/4/ HTTP/1.1" 200 251
+[15/Jul/2026 17:17:56] "GET /api/training/uebungen/ HTTP/1.1" 200 7842
+[15/Jul/2026 17:17:56] "GET /media/uebungen/aufbau/IMG_3682.jpeg HTTP/1.1" 200 2817397
+[15/Jul/2026 17:18:01] "PATCH /api/training/uebungen/4/ HTTP/1.1" 200 196
+[15/Jul/2026 17:18:03] "GET /api/training/uebungen/ HTTP/1.1" 200 7787
+[15/Jul/2026 17:19:30] "POST /api/auth/logout/ HTTP/1.1" 200 91
+[15/Jul/2026 17:19:47] "POST /api/auth/login/ HTTP/1.1" 200 330
+[15/Jul/2026 17:19:48] "GET /api/players/ HTTP/1.1" 200 11694
+[15/Jul/2026 17:19:48] "GET /api/clubs/ HTTP/1.1" 200 42
+[15/Jul/2026 17:19:48] "GET /api/formations/ HTTP/1.1" 200 2513
+[15/Jul/2026 17:19:48] "GET /api/lineups/ HTTP/1.1" 200 12211
+[15/Jul/2026 17:19:49] "GET /api/matchreports/ HTTP/1.1" 200 12943
+[15/Jul/2026 17:19:59] "GET /api/lineups/ HTTP/1.1" 200 12211
+[15/Jul/2026 17:19:59] "GET /api/training/trainings/ HTTP/1.1" 200 206
+[15/Jul/2026 17:19:59] "GET /api/matchreports/ HTTP/1.1" 200 12943
+[15/Jul/2026 17:19:59] "GET /api/lineups/ HTTP/1.1" 200 12211
+[15/Jul/2026 17:20:00] "GET /api/training/trainings/ HTTP/1.1" 200 206
+[15/Jul/2026 17:20:00] "GET /api/training/categories/ HTTP/1.1" 200 228
+[15/Jul/2026 17:20:01] "GET /api/training/uebungen/ HTTP/1.1" 200 7787
+[15/Jul/2026 17:20:01] "GET /api/training/categories/ HTTP/1.1" 200 228
+[15/Jul/2026 17:20:01] "GET /api/matchreports/ HTTP/1.1" 200 12943
+[15/Jul/2026 17:20:02] "GET /api/training/uebungen/ HTTP/1.1" 200 7787
+[15/Jul/2026 17:35:24] "PATCH /api/training/uebungen/4/ HTTP/1.1" 200 280
+[15/Jul/2026 17:35:25] "GET /api/training/uebungen/ HTTP/1.1" 200 7871
+[15/Jul/2026 17:35:26] "GET /media/uebungen/aufbau/WhatsApp_Image_2026-04-20_at_17.56.30.jpeg HTTP/1.1" 200 1502982
+[15/Jul/2026 17:35:36] "PATCH /api/training/uebungen/4/ HTTP/1.1" 200 196
+[15/Jul/2026 17:35:37] "GET /api/training/uebungen/ HTTP/1.1" 200 7787
