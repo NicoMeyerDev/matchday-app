@@ -8,29 +8,51 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Formation',
+            name="Formation",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=50, unique=True)),
-                ('description', models.TextField(blank=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=50, unique=True)),
+                ("description", models.TextField(blank=True)),
             ],
         ),
         migrations.CreateModel(
-            name='FormationPosition',
+            name="FormationPosition",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('label', models.CharField(max_length=30)),
-                ('x', models.PositiveIntegerField()),
-                ('y', models.PositiveIntegerField()),
-                ('formation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='positions', to='formations.formation')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("label", models.CharField(max_length=30)),
+                ("x", models.PositiveIntegerField()),
+                ("y", models.PositiveIntegerField()),
+                (
+                    "formation",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="positions",
+                        to="formations.formation",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['y', 'x'],
+                "ordering": ["y", "x"],
             },
         ),
     ]

@@ -118,10 +118,9 @@ export default function Hub({ user, players, reports, onNavigate, onSelectPlayer
                 <span className="qt-icon">📊</span>
                 <div className="qt-label">Post-Match</div>
               </div>
-              <div className="quick-tile gray">
-                <span className="qt-icon">📈</span>
-                <div className="qt-label">Analyse</div>
-                <div className="qt-soon">Bald</div>
+              <div className="quick-tile purple" onClick={() => onNavigate("training")}>
+                <span className="qt-icon">🎯</span>
+                <div className="qt-label">Training</div>
               </div>
             </div>
           </div>

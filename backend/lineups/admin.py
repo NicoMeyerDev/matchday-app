@@ -24,3 +24,7 @@ class LineupAdmin(admin.ModelAdmin):
 
     list_display = ["title", "opponent", "formation", "updated_at"]
     inlines = [LineupSlotInline, LineupSubstituteInline]
+
+admin.site.register(LineupSlot)
+
+admin.site.register(LineupSubstitute)

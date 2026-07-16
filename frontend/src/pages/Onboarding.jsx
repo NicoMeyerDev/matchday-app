@@ -1,11 +1,14 @@
 import { useState } from "react";
+import vereinHero from "../assets/images/verein-hero.png";
 
 const S = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500&display=swap');
 
   .ob-root {
     min-height: 100vh;
-    background: #07070a;
+    background:
+      linear-gradient(180deg, rgba(7,7,10,0.55) 0%, rgba(7,7,10,0.65) 60%, rgba(7,7,10,0.75) 100%),
+      url(${vereinHero}) center / cover no-repeat;
     font-family: 'DM Sans', sans-serif;
     color: #d4d4d8;
     display: flex;
@@ -14,18 +17,6 @@ const S = `
     padding: 24px;
     position: relative;
     overflow: hidden;
-  }
-
-  /* Subtle pitch lines in background */
-  .ob-root::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(rgba(34,197,94,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(34,197,94,0.03) 1px, transparent 1px);
-    background-size: 60px 60px;
-    pointer-events: none;
   }
 
   .ob-card {

@@ -1,11 +1,14 @@
 import { useState } from "react";
+import loginHero from "../assets/images/Login-hero.png";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500&display=swap');
 
   .auth-root {
     min-height: 100vh;
-    background: #0a0a0a;
+    background:
+      linear-gradient(180deg, rgba(10,10,10,0.82) 0%, rgba(10,10,10,0.9) 55%, rgba(10,10,10,0.97) 100%),
+      url(${loginHero}) center / cover no-repeat;
     display: flex;
     align-items: center;
     justify-content: center;

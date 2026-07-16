@@ -9,43 +9,106 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('formations', '0001_initial'),
-        ('players', '0001_initial'),
+        ("formations", "0001_initial"),
+        ("players", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Lineup',
+            name="Lineup",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=120)),
-                ('opponent', models.CharField(blank=True, max_length=120)),
-                ('general_notes', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('formation', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='formations.formation')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=120)),
+                ("opponent", models.CharField(blank=True, max_length=120)),
+                ("general_notes", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "formation",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="formations.formation",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='LineupSubstitute',
+            name="LineupSubstitute",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('note', models.TextField(blank=True)),
-                ('lineup', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='substitutes', to='lineups.lineup')),
-                ('player', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='players.player')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("note", models.TextField(blank=True)),
+                (
+                    "lineup",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="substitutes",
+                        to="lineups.lineup",
+                    ),
+                ),
+                (
+                    "player",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="players.player"
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='LineupSlot',
+            name="LineupSlot",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('instruction', models.TextField(blank=True)),
-                ('lineup', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='slots', to='lineups.lineup')),
-                ('player', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='players.player')),
-                ('position', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='formations.formationposition')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("instruction", models.TextField(blank=True)),
+                (
+                    "lineup",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="slots",
+                        to="lineups.lineup",
+                    ),
+                ),
+                (
+                    "player",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="players.player",
+                    ),
+                ),
+                (
+                    "position",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="formations.formationposition",
+                    ),
+                ),
             ],
             options={
-                'unique_together': {('lineup', 'position')},
+                "unique_together": {("lineup", "position")},
             },
         ),
     ]

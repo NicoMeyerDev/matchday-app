@@ -54,6 +54,7 @@ class UebungSerializer(serializers.ModelSerializer):
             "description",
             "duration",
             "player_count",
+            "pictures",
             "categories",
             "category_ids",
             "created_at",

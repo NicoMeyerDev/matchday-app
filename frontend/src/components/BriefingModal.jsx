@@ -192,7 +192,7 @@ function getPositionGroup(label = "") {
 // group = Positionsgruppe (siehe getPositionGroup). zone = Rechteck in %,
 // für die linke Feldseite definiert, wird bei side === -1 an x=50 gespiegelt.
 // Neue Rolle ergänzen: einfach neuen Eintrag hinzufügen, nichts anfassen.
-const ROLE_ZONES = {
+export const ROLE_ZONES = {
   // --- Sturm ---
   stossstuermer: {
     label: "Stoßstürmer",
@@ -404,6 +404,49 @@ export const TASK_MOVEMENTS = {
     path: [{ dx: 0, dy: -15 }],
   },
 };
+
+// === Rückwandlung: instruction-String -> playerBriefings-Eintrag ======
+// buildInstructionText (utils/lineup.js) speichert nur roleKey + aufgaben-Keys
+// als JSON im instruction-Feld. Labels werden hier IMMER live aus ROLE_ZONES/
+// TASK_MOVEMENTS nachgeschlagen (nicht aus dem Text geraten), damit spätere
+// Label-Umbenennungen automatisch übernommen werden.
+
+/**
+ * Parst den instruction-String eines Slots zurück in einen playerBriefings-Eintrag
+ * ({ role, roleLabel, aufgaben, aufgabenLabels }). Gibt null zurück bei leerem,
+ * fremdem oder altem (rein menschenlesbarem) instruction-Text.
+ */
+export function parseInstructionText(instruction) {
+  if (!instruction) return null;
+  let parsed;
+  try {
+    parsed = JSON.parse(instruction);
+  } catch {
+    return null;
+  }
+  const roleKey = parsed?.role;
+  const role = roleKey ? ROLE_ZONES[roleKey] : null;
+  if (!role) return null;
+
+  const aufgaben = Array.isArray(parsed.aufgaben) ? parsed.aufgaben.filter((key) => TASK_MOVEMENTS[key]) : [];
+  return {
+    role: roleKey,
+    roleLabel: role.label,
+    aufgaben,
+    aufgabenLabels: aufgaben.map((key) => TASK_MOVEMENTS[key].label),
+  };
+}
+
+/**
+ * Baut aus einem instruction-String einen lesbaren Anzeige-Text (z.B. für Tooltips
+ * oder Listen), unabhängig vom internen Key-Format. Fällt bei altem Freitext-Format
+ * auf den Rohtext zurück.
+ */
+export function getInstructionDisplayText(instruction) {
+  const parsed = parseInstructionText(instruction);
+  if (!parsed) return instruction || "";
+  return [parsed.roleLabel, parsed.aufgabenLabels.join(", ")].filter(Boolean).join(" – ");
+}
 
 // === Generische Bewegungs-Engine =======================================
 // Berechnet aus path.length die Keyframe-Zeitpunkte, sodass die Halte-

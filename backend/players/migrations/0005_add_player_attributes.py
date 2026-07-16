@@ -6,68 +6,68 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('players', '0004_alter_player_status'),
+        ("players", "0004_alter_player_status"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='player',
-            name='attr_ausdauer',
+            model_name="player",
+            name="attr_ausdauer",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='player',
-            name='attr_ballkontrolle',
+            model_name="player",
+            name="attr_ballkontrolle",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='player',
-            name='attr_dribbling',
+            model_name="player",
+            name="attr_dribbling",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='player',
-            name='attr_einsatz',
+            model_name="player",
+            name="attr_einsatz",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='player',
-            name='attr_entscheidung',
+            model_name="player",
+            name="attr_entscheidung",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='player',
-            name='attr_konzentration',
+            model_name="player",
+            name="attr_konzentration",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='player',
-            name='attr_kraft',
+            model_name="player",
+            name="attr_kraft",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='player',
-            name='attr_passspiel',
+            model_name="player",
+            name="attr_passspiel",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='player',
-            name='attr_schnelligkeit',
+            model_name="player",
+            name="attr_schnelligkeit",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='player',
-            name='attr_schuss',
+            model_name="player",
+            name="attr_schuss",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='player',
-            name='attr_teamwork',
+            model_name="player",
+            name="attr_teamwork",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='player',
-            name='attr_zweikampfstaerke',
+            model_name="player",
+            name="attr_zweikampfstaerke",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
     ]

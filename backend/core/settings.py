@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "formations",
     "lineups",
     "clubs",
+    "taktik",
     "training",
     "auth_app",
     "matchreport",
@@ -80,7 +81,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 
 DATABASES = {
-    'default': dj_database_url.config(
+    "default": dj_database_url.config(
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
         conn_max_age=600,
     )
@@ -117,3 +118,8 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=50),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
+
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', BASE_DIR / 'media')
+MEDIA_URL = '/media/'

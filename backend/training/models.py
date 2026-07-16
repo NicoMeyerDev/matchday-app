@@ -78,6 +78,7 @@ class Uebung(models.Model):
     )
     name = models.CharField(max_length=120)
     description = models.TextField(blank=True)
+    pictures = models.ImageField(upload_to="uebungen/aufbau/", null=True, blank=True)
     duration = models.PositiveIntegerField(help_text="Dauer in Minuten")
     player_count = models.CharField(max_length=20, blank=True)  # z.B. "4v2", "6v6"
     categories = models.ManyToManyField(Category, blank=True, related_name="uebungen")

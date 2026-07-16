@@ -16,12 +16,28 @@ import PostMatch from "./pages/PostMatch";
 import Layout from "./components/Layout";
 import PlayersPage from "./pages/Players";
 import Onboarding from "./pages/Onboarding";
+import Verein from "./pages/Verein";
+import InviteAccept from "./pages/InviteAccept";
 import MatchTimerBar from "./components/MatchTimerBar";
 import MatchdayFormationBar from "./components/MatchdayFormationBar";
-import BriefingModal from "./components/BriefingModal";
+import BriefingModal, { parseInstructionText } from "./components/BriefingModal";
 import LineupExportButton from "./components/LineupExportButton";
 import { useAutoDismiss } from "./hooks/useAutoDismiss";
 import TrainingsHub from "./pages/TrainingsHub";
+
+const INVITE_TOKEN_STORAGE_KEY = "pending_invite_token";
+
+// Liest den Einladungs-Token entweder aus der aktuellen URL (/invite/<token>)
+// oder - falls der Nutzer zwischendurch zum Login/Registrieren musste und die
+// Seite neu geladen wurde - aus dem Session-Storage.
+function getInitialInviteToken() {
+  const match = /^\/invite\/([^/]+)\/?$/.exec(window.location.pathname);
+  if (match) {
+    sessionStorage.setItem(INVITE_TOKEN_STORAGE_KEY, match[1]);
+    return match[1];
+  }
+  return sessionStorage.getItem(INVITE_TOKEN_STORAGE_KEY) || null;
+}
 
 function BackButton({ onClick }) {
   return (
@@ -61,7 +77,6 @@ export default function App() {
   const [activePosition, setActivePosition] = useState(null);
   const [isPlayerDrawerOpen, setIsPlayerDrawerOpen] = useState(true);
   const [isBenchOpen, setIsBenchOpen] = useState(true);
-  const [isNotesOpen, setIsNotesOpen] = useState(true);
   const [error, setError] = useAutoDismiss("", 5000);
   const [info, setInfo] = useAutoDismiss("", 4000);
   const [isLoading, setIsLoading] = useState(false);
@@ -74,6 +89,7 @@ export default function App() {
   const [matchEvents, setMatchEvents] = useState([]);
   const [hubPlayerTarget, setHubPlayerTarget] = useState(null);
   const [hubReportTarget, setHubReportTarget] = useState(null);
+  const [pendingInviteToken, setPendingInviteToken] = useState(getInitialInviteToken);
 
   // Wechsel-Briefing (Matchday): aktuell angezeigtes Briefing oder null
   const [briefing, setBriefing] = useState(null);
@@ -181,6 +197,20 @@ export default function App() {
     );
   }
 
+  if (pendingInviteToken) {
+    return (
+      <InviteAccept
+        token={pendingInviteToken}
+        onDone={(acceptedClub) => {
+          sessionStorage.removeItem(INVITE_TOKEN_STORAGE_KEY);
+          window.history.replaceState(null, "", "/");
+          if (acceptedClub) setClub(acceptedClub);
+          setPendingInviteToken(null);
+        }}
+      />
+    );
+  }
+
   if (isLoading) return (
     <main className="loading-screen">
       <div className="spinner" />
@@ -232,6 +262,16 @@ export default function App() {
     setNotes(lineup.general_notes || "");
     setLineupTitle(lineup.title || "MVP Testspiel");
     setOpponent(lineup.opponent || "Gegner noch nicht eingetragen");
+
+    // Rolle/Aufgabe pro Spieler aus dem gespeicherten instruction-String zurückgewinnen,
+    // damit das BriefingModal beim erneuten Öffnen eines Slots wieder vorausgewählt ist.
+    const briefings = {};
+    (lineup.slots || []).forEach((slot) => {
+      const playerId = slot.player_detail?.id || slot.player;
+      const parsed = parseInstructionText(slot.instruction);
+      if (playerId && parsed) briefings[playerId] = parsed;
+    });
+    setPlayerBriefings(briefings);
   }
 
   function handleSelectFormation(formationId) {
@@ -442,7 +482,7 @@ function handleMatchdaySelectPlayer(player) {
     if (!selectedFormationId) return;
     try {
       setIsSaving(true);
-      const payload = buildLineupPayload({ title: lineupTitle, opponent, formationId: selectedFormationId, assignedSlots, substitutes, generalNotes: notes });
+      const payload = buildLineupPayload({ title: lineupTitle, opponent, formationId: selectedFormationId, assignedSlots, substitutes, generalNotes: notes, playerBriefings });
       const created = await createLineup(payload);
       const fresh = await fetchLineups();
       setLineups(fresh);
@@ -455,7 +495,7 @@ function handleMatchdaySelectPlayer(player) {
     if (!selectedLineupId || !selectedFormationId) return;
     try {
       setIsSaving(true);
-      const payload = buildLineupPayload({ title: lineupTitle, opponent, formationId: selectedFormationId, assignedSlots, substitutes, generalNotes: notes });
+      const payload = buildLineupPayload({ title: lineupTitle, opponent, formationId: selectedFormationId, assignedSlots, substitutes, generalNotes: notes, playerBriefings });
       const updated = await updateLineup(selectedLineupId, payload);
       const fresh = await fetchLineups();
       setLineups(fresh);
@@ -588,6 +628,15 @@ async function handleLogEvent(event) {
             <TrainingsHub onBack={() => setCurrentPage("hub")} />
           </Layout>
         );
+      case "verein":
+        return (
+          <Layout user={user} club={club} onLogout={handleLogout} currentPage={currentPage} onNavigate={setCurrentPage}>
+            <main className="app-shell">
+              <BackButton onClick={() => setCurrentPage("hub")} />
+              <Verein club={club} />
+            </main>
+          </Layout>
+        );
       case "preparation":
         return (
           <main className="app-shell page-fade-in">
@@ -613,7 +662,7 @@ async function handleLogEvent(event) {
               onToggleTaskOverlay={() => setShowTaskOverlay((s) => !s)}
               exportButton={<LineupExportButton formation={selectedFormation} assignedSlots={assignedSlots} club={club} lineupTitle={lineupTitle} opponent={opponent} />}
             />
-            <div className={`workspace ${isPlayerDrawerOpen ? "drawer-open" : "drawer-closed"} ${isBenchOpen || isNotesOpen ? "right-open" : "right-closed"}`}>
+            <div className={`workspace ${isPlayerDrawerOpen ? "drawer-open" : "drawer-closed"} ${isBenchOpen ? "right-open" : "right-closed"}`}>
               <div className={mobileTab !== "spieler" ? "mobile-hidden" : ""}>
                 <PlayerList players={players} selectedPlayerId={selectedPlayerId} isOpen={isPlayerDrawerOpen} assignedSlots={assignedSlots} substitutes={substitutes} onToggle={() => setIsPlayerDrawerOpen((s) => !s)} onSelectPlayer={setSelectedPlayerId} onAddToBench={handleAddToBench} onAddPlayer={() => setIsAddPlayerOpen(true)} />
               </div>
@@ -622,7 +671,7 @@ async function handleLogEvent(event) {
               </div>
               <aside className={`side-stack ${mobileTab !== "bank" ? "mobile-hidden" : ""}`}>
                 <Bench substitutes={substitutes} onRemoveFromBench={handleRemoveFromBench} isOpen={isBenchOpen} onToggle={() => setIsBenchOpen((s) => !s)} />
-                <NotesPanel notes={notes} onChangeNotes={setNotes} isOpen={isNotesOpen} onToggle={() => setIsNotesOpen((s) => !s)} />
+                <NotesPanel notes={notes} onChangeNotes={setNotes} />
               </aside>
             </div>
             <PositionPlayerPicker position={activePosition} currentPlayer={currentPlayerForActivePosition} matchingPlayers={matchingPlayersForActivePosition} otherPlayers={otherPlayersForActivePosition} onClose={() => setActivePosition(null)} onSelectPlayer={handlePreparationSelectPlayer} onClearPosition={(id) => { handleClearPosition(id); setActivePosition(null); }} />
@@ -655,13 +704,13 @@ async function handleLogEvent(event) {
             <MatchdayFormationBar
               lineups={lineups} selectedLineupId={selectedLineupId} onSelectLineup={handleSelectLineup}
               showTaskOverlay={showTaskOverlay} onToggleTaskOverlay={() => setShowTaskOverlay((s) => !s)} />
-            <div className={`workspace no-drawer ${isBenchOpen || isNotesOpen ? "right-open" : "right-closed"}`}>
+            <div className={`workspace no-drawer ${isBenchOpen ? "right-open" : "right-closed"}`}>
               <div className={mobileTab !== "feld" ? "mobile-hidden" : ""}>
                 <Pitch formation={selectedFormation} assignedSlots={assignedSlots} onOpenPositionPicker={setActivePosition} onClearPosition={handleClearPosition} playerBriefings={playerBriefings} showTaskOverlay={showTaskOverlay} />
               </div>
               <aside className={`side-stack ${mobileTab !== "bank" ? "mobile-hidden" : ""}`}>
                 <Bench substitutes={substitutes} onRemoveFromBench={handleRemoveFromBench} isOpen={isBenchOpen} onToggle={() => setIsBenchOpen((s) => !s)} />
-                <NotesPanel notes={notes} onChangeNotes={setNotes} isOpen={isNotesOpen} onToggle={() => setIsNotesOpen((s) => !s)} />
+                <NotesPanel notes={notes} onChangeNotes={setNotes} />
               </aside>
             </div>
             <PositionPlayerPicker position={activePosition} currentPlayer={currentPlayerForActivePosition} matchingPlayers={matchingPlayersForActivePosition} otherPlayers={otherPlayersForActivePosition} onClose={() => setActivePosition(null)} onSelectPlayer={handleMatchdaySelectPlayer} onClearPosition={(id) => { handleClearPosition(id); setActivePosition(null); }} />

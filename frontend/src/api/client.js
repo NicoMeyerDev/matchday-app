@@ -33,9 +33,10 @@ function forceLogout() {
 
 async function request(endpoint, options = {}, isRetry = false) {
   const token = localStorage.getItem('access_token');
+  const isFormData = options.body instanceof FormData;
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(token ? { "Authorization": `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
@@ -108,6 +109,17 @@ export function createMatchEvent(payload) {
 // ── Auth ──
 export function fetchCurrentUser() { return request("/auth/current-user/"); }
 
+// ── Club-Einladung ──
+export function createClubInvite(email) {
+  return request("/auth/club-invite/", { method: "POST", body: JSON.stringify({ email }) });
+}
+
+export function acceptClubInvite(token) {
+  return request(`/auth/accept-invite/${token}/`, { method: "POST" });
+}
+
+export function fetchClubs() { return request("/clubs/"); }
+
 // ── Training ──
 export function fetchTrainings() { return request("/training/trainings/"); }
 
@@ -138,12 +150,26 @@ export function createTrainingBlock(payload) {
 // ── Übungen ──
 export function fetchUebungen() { return request("/training/uebungen/"); }
 
+// Baut multipart/form-data für den Aufbau-Bild-Upload (statt JSON)
+function buildUebungFormData(payload) {
+  const formData = new FormData();
+  if (payload.name !== undefined) formData.append("name", payload.name);
+  if (payload.description !== undefined) formData.append("description", payload.description);
+  if (payload.duration !== undefined) formData.append("duration", payload.duration);
+  if (payload.player_count !== undefined) formData.append("player_count", payload.player_count);
+  (payload.category_ids || []).forEach(id => formData.append("category_ids", id));
+  formData.append("pictures", payload.pictureFile);
+  return formData;
+}
+
 export function createUebung(payload) {
-  return request("/training/uebungen/", { method: "POST", body: JSON.stringify(payload) });
+  const body = payload.pictureFile ? buildUebungFormData(payload) : JSON.stringify(payload);
+  return request("/training/uebungen/", { method: "POST", body });
 }
 
 export function updateUebung(id, payload) {
-  return request(`/training/uebungen/${id}/`, { method: "PATCH", body: JSON.stringify(payload) });
+  const body = payload.pictureFile ? buildUebungFormData(payload) : JSON.stringify(payload);
+  return request(`/training/uebungen/${id}/`, { method: "PATCH", body });
 }
 
 export function deleteUebung(id) {
