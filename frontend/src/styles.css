@@ -37,18 +37,32 @@ select, input { min-width: 0; border: 1px solid #1e1e24; border-radius: 12px; pa
 .section-title h2 { margin: 0 0 3px; font-size: 20px; }
 .section-title p { margin: 0; font-size: 13px; }
 
-.player-drawer { position: sticky; top: 18px; min-height: 720px; background: #0f0f14; border: 1px solid #1e1e24; border-radius: 18px; box-shadow: 0 10px 25px rgba(0,0,0,.3); transition: width .2s ease; overflow: hidden; }
+/* Höhe exakt an .pitch gebunden (siehe dortige height: min(720px, 60vh)),
+   damit die Spielerliste nie länger als das Spielfeld daneben wird. */
+.player-drawer { position: sticky; top: 18px; height: min(720px, 60vh); background: #0f0f14; border: 1px solid #1e1e24; border-radius: 18px; box-shadow: 0 10px 25px rgba(0,0,0,.3); transition: width .2s ease; overflow: hidden; display: flex; flex-direction: column; }
 .player-drawer.open { width: 330px; padding: 16px; }
 .player-drawer.closed { width: 58px; padding: 10px; display: grid; place-items: start center; }
 .drawer-toggle { width: 36px; height: 36px; border-radius: 999px; border: 1px solid #1e1e24; background: #111116; cursor: pointer; font-size: 28px; line-height: 1; font-weight: 900; display: grid; place-items: center; color: #a1a1aa; }
 .player-drawer.open .drawer-toggle { position: absolute; right: 12px; top: 12px; }
-.player-drawer-content { padding-top: 8px; }
-.player-list, .bench-list { display: grid; gap: 10px; max-height: 620px; overflow: auto; padding-right: 3px; }
+.player-drawer-content { padding-top: 8px; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.bench-list { display: grid; gap: 10px; max-height: 620px; overflow: auto; padding-right: 3px; }
+.player-list { display: grid; gap: 10px; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-right: 3px; }
 .player-card, .bench-card { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #1e1e24; border-radius: 14px; background: #1a1a24; }
 .player-card.selected { border-color: #22c55e; background: #0d1f0e; }
-.player-main { flex: 1; display: flex; align-items: center; gap: 10px; background: transparent; border: 0; text-align: left; cursor: pointer; color: #d4d4d8; }
+.player-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; background: transparent; border: 0; text-align: left; cursor: pointer; color: #d4d4d8; }
 .shirt { width: 42px; height: 42px; border-radius: 999px; background: #163d25; color: white; display: grid; place-items: center; font-weight: 800; flex: 0 0 auto; }
 .player-main span:last-child, .bench-card div { display: grid; gap: 2px; }
+.player-main span:last-child { min-width: 0; }
+.player-main span:last-child strong,
+.player-main span:last-child small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.player-card .player-main strong { font-size: 13px; }
+.player-card .player-main small { font-size: 11px; }
+.player-card .ghost-button { flex: 0 0 auto; font-size: 12px; padding: 6px 8px; }
 .ghost-button { border: 1px solid #1e1e24; background: #111116; border-radius: 999px; padding: 8px 10px; cursor: pointer; font-weight: 700; color: #a1a1aa; }
 .ghost-button:hover { background: #1a1a24; }
 .ghost-button.danger { border-color: #3f1f1f; color: #f87171; }
