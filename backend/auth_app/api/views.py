@@ -168,7 +168,7 @@ class ClubinviteView(APIView):
             return Response(
                 {
                     **serializer.data,
-                    "invite_link": f"{settings.FRONTEND_URL}/invite/{serializer.data['token']}",
+                    "invite_link": f"{settings.FRONTEND_URL.rstrip('/')}/invite/{serializer.data['token']}",
                 },
                 status=status.HTTP_201_CREATED,
             )
