@@ -205,6 +205,12 @@ class AcceptClubInviteView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        if invite.email.lower() != request.user.email.lower():
+            return Response(
+                {"detail": "Diese Einladung kann nicht mit dem aktuell eingeloggtem Account angenommen werden."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # Mark the invite as used
         invite.is_used = True
         invite.used_at = timezone.now()
