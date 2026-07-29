@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { acceptClubInvite, fetchClubs } from "../api/client";
 
+// Muss exakt den Keys aus App.jsx entsprechen (dort wird der Token gesetzt).
+const INVITE_TOKEN_STORAGE_KEY = "pending_invite_token";
+const INVITE_TOKEN_TIMESTAMP_KEY = "pending_invite_token_at";
+
 // Einladungsannahme: nimmt eine Vereinseinladung per Token automatisch entgegen,
 // sobald der Nutzer eingeloggt ist, und meldet das Ergebnis an App zurück.
 const S = `
@@ -140,6 +144,12 @@ export default function InviteAccept({ token, onDone }) {
         if (cancelled) return;
         setErrorMessage(extractErrorMessage(error));
         setStatus("error");
+      } finally {
+        // Token-Storage in jedem Fall leeren, sobald der Accept-Request
+        // abgeschlossen ist (Erfolg oder Fehler) - verhindert, dass ein
+        // abgebrochener/fehlgeschlagener Flow einen veralteten Token hinterlässt.
+        sessionStorage.removeItem(INVITE_TOKEN_STORAGE_KEY);
+        sessionStorage.removeItem(INVITE_TOKEN_TIMESTAMP_KEY);
       }
     }
 
