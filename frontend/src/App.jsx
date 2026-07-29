@@ -26,6 +26,8 @@ import { useAutoDismiss } from "./hooks/useAutoDismiss";
 import TrainingsHub from "./pages/TrainingsHub";
 
 const INVITE_TOKEN_STORAGE_KEY = "pending_invite_token";
+const INVITE_TOKEN_TIMESTAMP_KEY = "pending_invite_token_at";
+const INVITE_TOKEN_MAX_AGE_MS = 10 * 60 * 1000; // 10 Minuten
 
 // Liest den Einladungs-Token entweder aus der aktuellen URL (/invite/<token>)
 // oder - falls der Nutzer zwischendurch zum Login/Registrieren musste und die
@@ -34,9 +36,29 @@ function getInitialInviteToken() {
   const match = /^\/invite\/([^/]+)\/?$/.exec(window.location.pathname);
   if (match) {
     sessionStorage.setItem(INVITE_TOKEN_STORAGE_KEY, match[1]);
+    sessionStorage.setItem(INVITE_TOKEN_TIMESTAMP_KEY, String(Date.now()));
     return match[1];
   }
-  return sessionStorage.getItem(INVITE_TOKEN_STORAGE_KEY) || null;
+
+  // Fallback nur erlauben, wenn wir uns noch im Invite-Kontext befinden
+  // (z.B. Reload während Login/Register auf einer /invite/-URL) - nicht,
+  // wenn der User z.B. auf der normalen Dashboard-URL "/" landet.
+  if (!window.location.pathname.startsWith("/invite/")) {
+    return null;
+  }
+
+  const storedToken = sessionStorage.getItem(INVITE_TOKEN_STORAGE_KEY);
+  const storedAt = Number(sessionStorage.getItem(INVITE_TOKEN_TIMESTAMP_KEY));
+  const isFresh = storedAt && Date.now() - storedAt < INVITE_TOKEN_MAX_AGE_MS;
+
+  if (!storedToken || !isFresh) {
+    // Alter/verwaister Token - nicht wiederverwenden.
+    sessionStorage.removeItem(INVITE_TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(INVITE_TOKEN_TIMESTAMP_KEY);
+    return null;
+  }
+
+  return storedToken;
 }
 
 function BackButton({ onClick }) {
@@ -203,6 +225,7 @@ export default function App() {
         token={pendingInviteToken}
         onDone={(acceptedClub) => {
           sessionStorage.removeItem(INVITE_TOKEN_STORAGE_KEY);
+          sessionStorage.removeItem(INVITE_TOKEN_TIMESTAMP_KEY);
           window.history.replaceState(null, "", "/");
           if (acceptedClub) setClub(acceptedClub);
           setPendingInviteToken(null);
